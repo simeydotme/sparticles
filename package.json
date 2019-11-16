@@ -1,0 +1,27 @@
+{
+  "name": "sparticles",
+  "version": "0.1.0",
+  "description": "Lightweight, High Performance Particles in Canvas",
+  "main": "dist/sparticles.js",
+  "files": [
+    "dist/sparticles.js",
+    "dist/sparticles.min.js"
+  ],
+  "repository": "https://github.com/simeydotme/sparticles.git",
+  "author": "simeydotme <simey.me@gmail.com>",
+  "license": "Mozilla Public License Version 2.0",
+  "private": true,
+  "scripts": {
+    "build": "rollup --config"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/preset-env": "^7.7.1",
+    "dat.gui": "^0.7.6",
+    "rollup": "^1.27.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-filesize": "^6.2.1",
+    "rollup-plugin-terser": "^5.1.2",
+    "stats.js": "^0.17.0"
+  }
+}
