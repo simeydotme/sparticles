@@ -32,8 +32,8 @@ export const Sparticles = function(node, width, height, options) {
     yVariance: 2
   };
   this.el = node || document.body;
-  this.width = width || 200;
-  this.height = height || this.width;
+  this.width = width || this.el.clientWidth;
+  this.height = height || this.el.clientHeight;
   this.options = options || {};
   this.sparticles = [];
   this.settings = { ...defaults, ...this.options };
