@@ -1,5 +1,14 @@
-var sparticles = (function (exports) {
-  'use strict';
+(function(l, r) {
+  if (l.getElementById("livereloadscript")) return;
+  r = l.createElement("script");
+  r.async = 1;
+  r.src =
+    "//" + (window.location.host || "localhost").split(":")[0] + ":35729/livereload.js?snipver=1";
+  r.id = "livereloadscript";
+  l.head.appendChild(r);
+})(window.document);
+var sparticles = (function(exports) {
+  "use strict";
 
   function _defineProperty(obj, key, value) {
     if (key in obj) {
@@ -7,7 +16,7 @@ var sparticles = (function (exports) {
         value: value,
         enumerable: true,
         configurable: true,
-        writable: true
+        writable: true,
       });
     } else {
       obj[key] = value;
@@ -21,9 +30,10 @@ var sparticles = (function (exports) {
 
     if (Object.getOwnPropertySymbols) {
       var symbols = Object.getOwnPropertySymbols(object);
-      if (enumerableOnly) symbols = symbols.filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-      });
+      if (enumerableOnly)
+        symbols = symbols.filter(function(sym) {
+          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        });
       keys.push.apply(keys, symbols);
     }
 
@@ -35,13 +45,13 @@ var sparticles = (function (exports) {
       var source = arguments[i] != null ? arguments[i] : {};
 
       if (i % 2) {
-        ownKeys(source, true).forEach(function (key) {
+        ownKeys(source, true).forEach(function(key) {
           _defineProperty(target, key, source[key]);
         });
       } else if (Object.getOwnPropertyDescriptors) {
         Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
       } else {
-        ownKeys(source).forEach(function (key) {
+        ownKeys(source).forEach(function(key) {
           Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
         });
       }
@@ -58,7 +68,7 @@ var sparticles = (function (exports) {
    */
   var AnimationFrame = function AnimationFrame() {
     var fps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 60;
-    var handler = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
+    var handler = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function() {};
     this.fps = fps;
     this.handler = handler;
     var renderId = 0;
@@ -67,7 +77,7 @@ var sparticles = (function (exports) {
      * to the instance in the constructor
      */
 
-    this.start = function () {
+    this.start = function() {
       var _this = this;
 
       var then = performance.now();
@@ -81,7 +91,7 @@ var sparticles = (function (exports) {
         if (delta >= interval - tolerance) {
           _this.handler(delta);
 
-          then = now - delta % interval;
+          then = now - (delta % interval);
         }
       };
 
@@ -91,14 +101,13 @@ var sparticles = (function (exports) {
      * stop the currently running animation loop
      */
 
-
-    this.stop = function () {
+    this.stop = function() {
       cancelAnimationFrame(renderId);
     };
   };
 
   var radian = function radian(angle) {
-    return angle * Math.PI / 180;
+    return (angle * Math.PI) / 180;
   };
   var cartesian = function cartesian(angle) {
     return [Math.cos(radian(angle - 90)), Math.sin(radian(angle - 90))];
@@ -110,7 +119,7 @@ var sparticles = (function (exports) {
    */
 
   var round = function round(num) {
-    return 0.5 + num | 0;
+    return (0.5 + num) | 0;
   };
   /**
    * clamp the input number to the min/max values
@@ -156,7 +165,10 @@ var sparticles = (function (exports) {
     var h = random(0, 360, true);
     var s = random(90, 100, true);
     var l = random(45, 85, true);
-    return "hsl(".concat(h, ",").concat(s, "%,").concat(l, "%)");
+    return "hsl("
+      .concat(h, ",")
+      .concat(s, "%,")
+      .concat(l, "%)");
   };
   /**
    * return a boolean to pass a dice roll
@@ -197,7 +209,7 @@ var sparticles = (function (exports) {
       speed: 10,
       style: "fill",
       xVariance: 2,
-      yVariance: 2
+      yVariance: 2,
     };
     this.el = node || document.body;
     this.width = width || this.el.clientWidth;
@@ -207,18 +219,18 @@ var sparticles = (function (exports) {
     this.settings = _objectSpread2({}, defaults, {}, this.options);
     this.setupColors();
     this.setupCanvas();
-    this.setupImage(function () {
+    this.setupImage(function() {
       me.createSparticles();
       me.start();
     });
     return this;
   };
 
-  Sparticles.prototype.start = function () {
+  Sparticles.prototype.start = function() {
     var me = this;
 
     if (!this.loop) {
-      this.loop = new AnimationFrame(60, function (t) {
+      this.loop = new AnimationFrame(60, function(t) {
         me.render(t);
       });
     }
@@ -226,11 +238,11 @@ var sparticles = (function (exports) {
     this.loop.start();
   };
 
-  Sparticles.prototype.stop = function () {
+  Sparticles.prototype.stop = function() {
     this.loop.stop();
   };
 
-  Sparticles.prototype.setupColors = function () {
+  Sparticles.prototype.setupColors = function() {
     var colors = 50;
 
     if (this.settings.color === "rainbow") {
@@ -242,7 +254,7 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticles.prototype.setupCanvas = function () {
+  Sparticles.prototype.setupCanvas = function() {
     this.canvas = document.createElement("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.canvas.width = this.width;
@@ -251,7 +263,7 @@ var sparticles = (function (exports) {
     this.context = this.canvas.getContext("2d");
   };
 
-  Sparticles.prototype.getImageCanvas = function (color) {
+  Sparticles.prototype.getImageCanvas = function(color) {
     var imgSize = this.image.width;
     this.images = this.images || {};
     this.images[color] = document.createElement("canvas");
@@ -264,15 +276,15 @@ var sparticles = (function (exports) {
     this.imgCtx.fillRect(0, 0, imgSize, imgSize);
   };
 
-  Sparticles.prototype.setupImage = function (callback) {
+  Sparticles.prototype.setupImage = function(callback) {
     if (this.settings.shape === "image" && this.settings.imageUrl) {
       var me = this;
       this.images = {};
       this.image = new Image();
 
-      this.image.onload = function () {
+      this.image.onload = function() {
         if (Array.isArray(me.settings.color)) {
-          me.settings.color.forEach(function (c) {
+          me.settings.color.forEach(function(c) {
             me.getImageCanvas(c);
           });
         } else {
@@ -282,7 +294,7 @@ var sparticles = (function (exports) {
         callback();
       };
 
-      this.image.onerror = function () {
+      this.image.onerror = function() {
         console.error("failed to load source image");
       };
 
@@ -292,7 +304,7 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticles.prototype.createSparticles = function () {
+  Sparticles.prototype.createSparticles = function() {
     this.sparticles = [];
 
     for (var i = 0; i < this.settings.count; i++) {
@@ -302,14 +314,18 @@ var sparticles = (function (exports) {
     return this.sparticles;
   };
 
-  Sparticles.prototype.render = function (t) {
+  Sparticles.prototype.render = function(t) {
     this.ctx.clearRect(0, 0, this.width, this.height);
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
     var _iteratorError = undefined;
 
     try {
-      for (var _iterator = this.sparticles[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      for (
+        var _iterator = this.sparticles[Symbol.iterator](), _step;
+        !(_iteratorNormalCompletion = (_step = _iterator.next()).done);
+        _iteratorNormalCompletion = true
+      ) {
         var sparticle = _step.value;
         sparticle.update().render(this.image, this.images);
       }
@@ -337,7 +353,6 @@ var sparticles = (function (exports) {
    * @param {Object} settings all the settings for the particle
    */
 
-
   var Sparticle = function Sparticle(canvas, settings) {
     if (canvas && settings) {
       this.canvas = canvas;
@@ -351,7 +366,7 @@ var sparticles = (function (exports) {
     return this;
   };
 
-  Sparticle.prototype.init = function () {
+  Sparticle.prototype.init = function() {
     var _ = this.settings;
     this.setup();
     this.alpha = random(_.minAlpha, _.maxAlpha);
@@ -363,7 +378,7 @@ var sparticles = (function (exports) {
     this.rotation = _.rotation ? radian(random(0, 360)) : 0;
   };
 
-  Sparticle.prototype.setup = function () {
+  Sparticle.prototype.setup = function() {
     var _ = this.settings;
     this.frame = 0;
     this.frameoffset = random(0, 360, true);
@@ -375,14 +390,14 @@ var sparticles = (function (exports) {
     this.dr = this.getRotation();
   };
 
-  Sparticle.prototype.isOffCanvas = function () {
+  Sparticle.prototype.isOffCanvas = function() {
     var topleft = 0 - this.size * 3;
     var bottom = this.canvas.height + this.size * 3;
     var right = this.canvas.width + this.size * 3;
     return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
   };
 
-  Sparticle.prototype.reset = function () {
+  Sparticle.prototype.reset = function() {
     this.setup();
 
     if (this.py < 0) {
@@ -398,7 +413,7 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.getColor = function () {
+  Sparticle.prototype.getColor = function() {
     if (Array.isArray(this.settings.color)) {
       return randomArray(this.settings.color);
     } else {
@@ -406,53 +421,56 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.getAlpha = function () {
+  Sparticle.prototype.getAlpha = function() {
     var av = this.settings.alphaVariance;
     return random(-av, av) / 10;
   };
 
-  Sparticle.prototype.getDeltaX = function () {
+  Sparticle.prototype.getDeltaX = function() {
     var d = this.getDelta();
     var dv = this.getDeltaVariance(this.settings.xVariance);
     return cartesian(this.settings.direction)[0] * d + dv;
   };
 
-  Sparticle.prototype.getDeltaY = function () {
+  Sparticle.prototype.getDeltaY = function() {
     var d = this.getDelta();
     var dv = this.getDeltaVariance(this.settings.yVariance);
     return cartesian(this.settings.direction)[1] * d + dv;
   };
 
-  Sparticle.prototype.getDeltaVariance = function () {
+  Sparticle.prototype.getDeltaVariance = function() {
     var v = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var s = this.settings.speed || 10;
 
     if (v > 0) {
-      return random(-v, v) * s / 100;
+      return (random(-v, v) * s) / 100;
     } else {
       return 0;
     }
   };
 
-  Sparticle.prototype.getDelta = function () {
+  Sparticle.prototype.getDelta = function() {
     var baseDelta = this.settings.speed * 0.1;
 
     if (this.settings.speed && this.settings.parallax) {
-      return baseDelta + this.size * this.settings.parallax / 50;
+      return baseDelta + (this.size * this.settings.parallax) / 50;
     } else {
       return baseDelta;
     }
   };
 
-  Sparticle.prototype.getFloat = function () {
+  Sparticle.prototype.getFloat = function() {
     if (!this.settings.float) {
       return 0;
     } else {
-      return random(this.settings.float - this.settings.float / 2, this.settings.float + this.settings.float / 2);
+      return random(
+        this.settings.float - this.settings.float / 2,
+        this.settings.float + this.settings.float / 2
+      );
     }
   };
 
-  Sparticle.prototype.getRotation = function () {
+  Sparticle.prototype.getRotation = function() {
     var r = 0;
 
     if (this.settings.rotation) {
@@ -466,16 +484,16 @@ var sparticles = (function (exports) {
     return r;
   };
 
-  Sparticle.prototype.update = function () {
+  Sparticle.prototype.update = function() {
     this.frame += 1;
     this.updateAlpha();
     this.updatePosition();
     return this;
   };
 
-  Sparticle.prototype.updateAlpha = function () {
+  Sparticle.prototype.updateAlpha = function() {
     if (this.settings.alphaSpeed > 0) {
-      var alphaTick = this.da / 1000 * this.settings.alphaSpeed * 10;
+      var alphaTick = (this.da / 1000) * this.settings.alphaSpeed * 10;
       this._alpha += alphaTick;
 
       if (this.da > 0 && this._alpha > this.settings.maxAlpha) {
@@ -490,7 +508,7 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.updatePosition = function () {
+  Sparticle.prototype.updatePosition = function() {
     this.px += this.dx;
     this.py += this.dy;
     this.updateRotate();
@@ -501,16 +519,23 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.updateRotate = function () {
+  Sparticle.prototype.updateRotate = function() {
     this.rotation += this.dr;
   };
 
-  Sparticle.prototype.updateFloat = function () {
+  Sparticle.prototype.updateFloat = function() {
     if (this.settings.float) {
-      if (this.settings.direction > 160 && this.settings.direction < 200 || this.settings.direction > 340 && this.settings.direction < 380 || this.settings.direction > -20 && this.settings.direction < 20) {
-        this.px += cartesian(this.frame + this.frameoffset)[0] * this.df / (this.getDelta() * 15);
-      } else if (this.settings.direction > 70 && this.settings.direction < 110 || this.settings.direction > 250 && this.settings.direction < 290) {
-        this.py += cartesian(this.frame + this.frameoffset)[1] * this.df / (this.getDelta() * 15);
+      if (
+        (this.settings.direction > 160 && this.settings.direction < 200) ||
+        (this.settings.direction > 340 && this.settings.direction < 380) ||
+        (this.settings.direction > -20 && this.settings.direction < 20)
+      ) {
+        this.px += (cartesian(this.frame + this.frameoffset)[0] * this.df) / (this.getDelta() * 15);
+      } else if (
+        (this.settings.direction > 70 && this.settings.direction < 110) ||
+        (this.settings.direction > 250 && this.settings.direction < 290)
+      ) {
+        this.py += (cartesian(this.frame + this.frameoffset)[1] * this.df) / (this.getDelta() * 15);
       }
     }
   };
@@ -519,8 +544,7 @@ var sparticles = (function (exports) {
    * @param {HTMLImageElement} [image] an image with a source attribute set
    */
 
-
-  Sparticle.prototype.render = function (image, images) {
+  Sparticle.prototype.render = function(image, images) {
     switch (this.settings.shape) {
       case "image":
         this.renderImage(image, images);
@@ -547,7 +571,7 @@ var sparticles = (function (exports) {
     return this;
   };
 
-  Sparticle.prototype.renderStyle = function () {
+  Sparticle.prototype.renderStyle = function() {
     this.ctx.globalCompositeOperation = this.settings.composition;
     this.ctx.globalAlpha = this.alpha;
     this.ctx.fillStyle = this.fillColor;
@@ -555,7 +579,7 @@ var sparticles = (function (exports) {
     this.ctx.strokeStyle = this.strokeColor;
   };
 
-  Sparticle.prototype.renderColor = function () {
+  Sparticle.prototype.renderColor = function() {
     if (this.settings.style === "fill" || this.settings.style === "both") {
       this.ctx.fill();
     }
@@ -565,7 +589,7 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.renderRotate = function () {
+  Sparticle.prototype.renderRotate = function() {
     if (this.settings.rotation > 0) {
       var centerX = this.px + this.size / 2;
       var centerY = this.py + this.size / 2;
@@ -575,13 +599,13 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.renderResetRotate = function () {
+  Sparticle.prototype.renderResetRotate = function() {
     if (this.settings.rotation > 0) {
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
   };
 
-  Sparticle.prototype.renderCircle = function () {
+  Sparticle.prototype.renderCircle = function() {
     var size = this.size / 2;
     this.renderStyle();
     this.ctx.beginPath();
@@ -589,7 +613,7 @@ var sparticles = (function (exports) {
     this.renderColor();
   };
 
-  Sparticle.prototype.renderSquare = function () {
+  Sparticle.prototype.renderSquare = function() {
     this.renderRotate();
     this.renderStyle();
     this.ctx.beginPath();
@@ -598,7 +622,7 @@ var sparticles = (function (exports) {
     this.renderResetRotate();
   };
 
-  Sparticle.prototype.renderTriangle = function () {
+  Sparticle.prototype.renderTriangle = function() {
     var size = this.size;
     var startx = this.px + size / 2;
     var starty = this.py;
@@ -613,7 +637,7 @@ var sparticles = (function (exports) {
     this.renderResetRotate();
   };
 
-  Sparticle.prototype.renderLine = function () {
+  Sparticle.prototype.renderLine = function() {
     var size = this.size;
     var startx = this.px;
     var starty = this.py;
@@ -629,8 +653,7 @@ var sparticles = (function (exports) {
    * @param {HTMLImageElement} [image] an image with a source attribute set
    */
 
-
-  Sparticle.prototype.renderImage = function (image, images) {
+  Sparticle.prototype.renderImage = function(image, images) {
     if (image && image.src) {
       var imgCanvas = images[this.fillColor];
       var imgSize = imgCanvas.width;
@@ -649,5 +672,4 @@ var sparticles = (function (exports) {
   exports.Sparticles = Sparticles;
 
   return exports;
-
-}({}));
+})({});
