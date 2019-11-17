@@ -50,6 +50,53 @@ var sparticles = (function (exports) {
     return target;
   }
 
+  /**
+   * Limited Animation Frame method, to allow running
+   * a given handler at the maximum desired frame rate.
+   * @param {Number} fps how many frames to render every second
+   * @param {Function} handler method to execute upon every frame
+   */
+  var AnimationFrame = function AnimationFrame() {
+    var fps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 60;
+    var handler = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
+    this.fps = fps;
+    this.handler = handler;
+    var renderId = 0;
+    /**
+     * begin the animation loop which is assigned
+     * to the instance in the constructor
+     */
+
+    this.start = function () {
+      var _this = this;
+
+      var then = performance.now();
+      var interval = 1000 / this.fps;
+      var tolerance = 0;
+
+      var loop = function loop(now) {
+        var delta = now - then;
+        renderId = requestAnimationFrame(loop);
+
+        if (delta >= interval - tolerance) {
+          _this.handler(delta);
+
+          then = now - delta % interval;
+        }
+      };
+
+      renderId = requestAnimationFrame(loop);
+    };
+    /**
+     * stop the currently running animation loop
+     */
+
+
+    this.stop = function () {
+      cancelAnimationFrame(renderId);
+    };
+  };
+
   var radian = function radian(angle) {
     return angle * Math.PI / 180;
   };
@@ -122,53 +169,6 @@ var sparticles = (function (exports) {
   };
 
   /**
-   * Limited Animation Frame method, to allow running
-   * a given handler at the maximum desired frame rate.
-   * @param {Number} fps how many frames to render every second
-   * @param {Function} handler method to execute upon every frame
-   */
-  var AnimationFrame = function AnimationFrame() {
-    var fps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 60;
-    var handler = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
-    this.fps = fps;
-    this.handler = handler;
-    var renderId = 0;
-    /**
-     * begin the animation loop which is assigned
-     * to the instance in the constructor
-     */
-
-    this.start = function () {
-      var _this = this;
-
-      var then = performance.now();
-      var interval = 1000 / this.fps;
-      var tolerance = 0;
-
-      var loop = function loop(now) {
-        var delta = now - then;
-        renderId = requestAnimationFrame(loop);
-
-        if (delta >= interval - tolerance) {
-          _this.handler(delta);
-
-          then = now - delta % interval;
-        }
-      };
-
-      renderId = requestAnimationFrame(loop);
-    };
-    /**
-     * stop the currently running animation loop
-     */
-
-
-    this.stop = function () {
-      cancelAnimationFrame(renderId);
-    };
-  };
-
-  /**
    *
    * @param {HTMLElement} [node]
    * @param {Number} [width]
@@ -177,8 +177,7 @@ var sparticles = (function (exports) {
    */
 
   var Sparticles = function Sparticles(node, width, height, options) {
-    var _this = this;
-
+    var me = this;
     var defaults = {
       alphaSpeed: 10,
       alphaVariance: 1,
@@ -209,9 +208,8 @@ var sparticles = (function (exports) {
     this.setupColors();
     this.setupCanvas();
     this.setupImage(function () {
-      _this.createSparticles();
-
-      _this.start();
+      me.createSparticles();
+      me.start();
     });
     return this;
   };
@@ -268,18 +266,17 @@ var sparticles = (function (exports) {
 
   Sparticles.prototype.setupImage = function (callback) {
     if (this.settings.shape === "image" && this.settings.imageUrl) {
-      var _this = this;
-
+      var me = this;
       this.images = {};
       this.image = new Image();
 
       this.image.onload = function () {
-        if (Array.isArray(_this.settings.color)) {
-          _this.settings.color.forEach(function (c) {
-            _this.getImageCanvas(c);
+        if (Array.isArray(me.settings.color)) {
+          me.settings.color.forEach(function (c) {
+            me.getImageCanvas(c);
           });
         } else {
-          _this.getImageCanvas(_this.settings.color);
+          me.getImageCanvas(me.settings.color);
         }
 
         callback();

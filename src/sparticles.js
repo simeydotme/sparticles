@@ -9,7 +9,7 @@ import { cartesian, clamp, radian, random, randomArray, randomHsl, roll } from "
  * @param {Object} [options]
  */
 export const Sparticles = function(node, width, height, options) {
-  const _this = this;
+  const me = this;
   const defaults = {
     alphaSpeed: 10,
     alphaVariance: 1,
@@ -40,8 +40,8 @@ export const Sparticles = function(node, width, height, options) {
   this.setupColors();
   this.setupCanvas();
   this.setupImage(function() {
-    _this.createSparticles();
-    _this.start();
+    me.createSparticles();
+    me.start();
   });
   return this;
 };
@@ -94,16 +94,16 @@ Sparticles.prototype.getImageCanvas = function(color) {
 
 Sparticles.prototype.setupImage = function(callback) {
   if (this.settings.shape === "image" && this.settings.imageUrl) {
-    const _this = this;
+    const me = this;
     this.images = {};
     this.image = new Image();
     this.image.onload = function() {
-      if (Array.isArray(_this.settings.color)) {
-        _this.settings.color.forEach(c => {
-          _this.getImageCanvas(c);
+      if (Array.isArray(me.settings.color)) {
+        me.settings.color.forEach(c => {
+          me.getImageCanvas(c);
         });
       } else {
-        _this.getImageCanvas(_this.settings.color);
+        me.getImageCanvas(me.settings.color);
       }
       callback();
     };
