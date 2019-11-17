@@ -10,16 +10,19 @@
   ],
   "repository": "https://github.com/simeydotme/sparticles.git",
   "author": "simeydotme <simey.me@gmail.com>",
-  "license": "Mozilla Public License Version 2.0",
+  "license": "MPL-2.0",
   "private": false,
   "scripts": {
     "build": "rollup --config",
     "dev": "rollup --config --watch",
-    "lint": "prettier *.js src/**/*.js --write"
+    "lint": "yarn -s lint-code && yarn -s lint-config",
+    "lint-code": "echo '\n✨  linting source code...\n' && prettier --write 'src/**/*.js'",
+    "lint-config": "echo '\n✨  linting config files...\n' && prettier --write '*.js' && echo ''",
+    "lint-staged": "pretty-quick --staged --pattern 'src/**/*.js' && pretty-quick --pattern '*.js'"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged"
+      "pre-commit": "yarn lint-staged"
     }
   },
   "devDependencies": {
