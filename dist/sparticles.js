@@ -1,8 +1,5 @@
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.sparticles = {}));
-}(this, (function (exports) { 'use strict';
+var sparticles = (function (exports) {
+  'use strict';
 
   function _defineProperty(obj, key, value) {
     if (key in obj) {
@@ -204,8 +201,8 @@
       yVariance: 2
     };
     this.el = node || document.body;
-    this.width = width || 200;
-    this.height = height || this.width;
+    this.width = width || this.el.clientWidth;
+    this.height = height || this.el.clientHeight;
     this.options = options || {};
     this.sparticles = [];
     this.settings = _objectSpread2({}, defaults, {}, this.options);
@@ -364,8 +361,8 @@
     this._alpha = this.alpha;
     this.fillColor = this.getColor();
     this.strokeColor = this.getColor();
-    this.px = random(0, this.canvas.width, true);
-    this.py = random(0, this.canvas.height, true);
+    this.px = random(-this.size * 2, this.canvas.width + this.size, true);
+    this.py = random(-this.size * 2, this.canvas.height + this.size, true);
     this.rotation = _.rotation ? radian(random(0, 360)) : 0;
   };
 
@@ -382,9 +379,9 @@
   };
 
   Sparticle.prototype.isOffCanvas = function () {
-    var topleft = 0 - this.size * 4;
-    var bottom = this.canvas.height + this.size * 4;
-    var right = this.canvas.width + this.size * 4;
+    var topleft = 0 - this.size * 3;
+    var bottom = this.canvas.height + this.size * 3;
+    var right = this.canvas.width + this.size * 3;
     return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
   };
 
@@ -654,6 +651,6 @@
 
   exports.Sparticles = Sparticles;
 
-  Object.defineProperty(exports, '__esModule', { value: true });
+  return exports;
 
-})));
+}({}));
