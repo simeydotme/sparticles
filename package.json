@@ -20,6 +20,7 @@
     "@babel/core": "^7.7.2",
     "@babel/preset-env": "^7.7.1",
     "dat.gui": "^0.7.6",
+    "prettier": "^1.19.1",
     "rollup": "^1.27.0",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-filesize": "^6.2.1",
