@@ -8,7 +8,7 @@ import { AnimationFrame } from "./animationFrame.js";
  * @param {Number} [height]
  * @param {Object} [options]
  */
-export const Sparticles = function (node, width, height, options) {
+export const Sparticles = function(node, width, height, options) {
   const _this = this;
   const defaults = {
     alphaSpeed: 10,
@@ -29,7 +29,7 @@ export const Sparticles = function (node, width, height, options) {
     speed: 10,
     style: "fill",
     xVariance: 2,
-    yVariance: 2
+    yVariance: 2,
   };
   this.el = node || document.body;
   this.width = width || this.el.clientWidth;
@@ -39,14 +39,14 @@ export const Sparticles = function (node, width, height, options) {
   this.settings = { ...defaults, ...this.options };
   this.setupColors();
   this.setupCanvas();
-  this.setupImage(function () {
+  this.setupImage(function() {
     _this.createSparticles();
     _this.start();
   });
   return this;
 };
 
-Sparticles.prototype.start = function () {
+Sparticles.prototype.start = function() {
   const me = this;
   if (!this.loop) {
     this.loop = new AnimationFrame(60, t => {
@@ -56,11 +56,11 @@ Sparticles.prototype.start = function () {
   this.loop.start();
 };
 
-Sparticles.prototype.stop = function () {
+Sparticles.prototype.stop = function() {
   this.loop.stop();
 };
 
-Sparticles.prototype.setupColors = function () {
+Sparticles.prototype.setupColors = function() {
   const colors = 50;
   if (this.settings.color === "rainbow") {
     this.settings.color = [];
@@ -70,7 +70,7 @@ Sparticles.prototype.setupColors = function () {
   }
 };
 
-Sparticles.prototype.setupCanvas = function () {
+Sparticles.prototype.setupCanvas = function() {
   this.canvas = document.createElement("canvas");
   this.ctx = this.canvas.getContext("2d");
   this.canvas.width = this.width;
@@ -79,7 +79,7 @@ Sparticles.prototype.setupCanvas = function () {
   this.context = this.canvas.getContext("2d");
 };
 
-Sparticles.prototype.getImageCanvas = function (color) {
+Sparticles.prototype.getImageCanvas = function(color) {
   const imgSize = this.image.width;
   this.images = this.images || {};
   this.images[color] = document.createElement("canvas");
@@ -92,12 +92,12 @@ Sparticles.prototype.getImageCanvas = function (color) {
   this.imgCtx.fillRect(0, 0, imgSize, imgSize);
 };
 
-Sparticles.prototype.setupImage = function (callback) {
+Sparticles.prototype.setupImage = function(callback) {
   if (this.settings.shape === "image" && this.settings.imageUrl) {
     const _this = this;
     this.images = {};
     this.image = new Image();
-    this.image.onload = function () {
+    this.image.onload = function() {
       if (Array.isArray(_this.settings.color)) {
         _this.settings.color.forEach(c => {
           _this.getImageCanvas(c);
@@ -107,7 +107,7 @@ Sparticles.prototype.setupImage = function (callback) {
       }
       callback();
     };
-    this.image.onerror = function () {
+    this.image.onerror = function() {
       console.error("failed to load source image");
     };
     this.image.src = this.settings.imageUrl;
@@ -116,7 +116,7 @@ Sparticles.prototype.setupImage = function (callback) {
   }
 };
 
-Sparticles.prototype.createSparticles = function () {
+Sparticles.prototype.createSparticles = function() {
   this.sparticles = [];
   for (let i = 0; i < this.settings.count; i++) {
     this.sparticles.push(new Sparticle(this.canvas, this.settings));
@@ -124,7 +124,7 @@ Sparticles.prototype.createSparticles = function () {
   return this.sparticles;
 };
 
-Sparticles.prototype.render = function (t) {
+Sparticles.prototype.render = function(t) {
   this.ctx.clearRect(0, 0, this.width, this.height);
   for (const sparticle of this.sparticles) {
     sparticle.update().render(this.image, this.images);
@@ -139,7 +139,7 @@ Sparticles.prototype.render = function (t) {
  * @param {HTMLElement} canvas the canvas element which the particle will render to
  * @param {Object} settings all the settings for the particle
  */
-const Sparticle = function (canvas, settings) {
+const Sparticle = function(canvas, settings) {
   if (canvas && settings) {
     this.canvas = canvas;
     this.ctx = this.canvas.getContext("2d");
@@ -151,7 +151,7 @@ const Sparticle = function (canvas, settings) {
   return this;
 };
 
-Sparticle.prototype.init = function () {
+Sparticle.prototype.init = function() {
   const _ = this.settings;
   this.setup();
   this.alpha = random(_.minAlpha, _.maxAlpha);
@@ -163,7 +163,7 @@ Sparticle.prototype.init = function () {
   this.rotation = _.rotation ? radian(random(0, 360)) : 0;
 };
 
-Sparticle.prototype.setup = function () {
+Sparticle.prototype.setup = function() {
   const _ = this.settings;
   this.frame = 0;
   this.frameoffset = random(0, 360, true);
@@ -175,14 +175,14 @@ Sparticle.prototype.setup = function () {
   this.dr = this.getRotation();
 };
 
-Sparticle.prototype.isOffCanvas = function () {
+Sparticle.prototype.isOffCanvas = function() {
   const topleft = 0 - this.size * 3;
   const bottom = this.canvas.height + this.size * 3;
   const right = this.canvas.width + this.size * 3;
   return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
 };
 
-Sparticle.prototype.reset = function () {
+Sparticle.prototype.reset = function() {
   this.setup();
   if (this.py < 0) {
     this.py = this.canvas.height + this.size * 2;
@@ -196,7 +196,7 @@ Sparticle.prototype.reset = function () {
   }
 };
 
-Sparticle.prototype.getColor = function () {
+Sparticle.prototype.getColor = function() {
   if (Array.isArray(this.settings.color)) {
     return randomArray(this.settings.color);
   } else {
@@ -204,24 +204,24 @@ Sparticle.prototype.getColor = function () {
   }
 };
 
-Sparticle.prototype.getAlpha = function () {
+Sparticle.prototype.getAlpha = function() {
   const av = this.settings.alphaVariance;
   return random(-av, av) / 10;
 };
 
-Sparticle.prototype.getDeltaX = function () {
+Sparticle.prototype.getDeltaX = function() {
   const d = this.getDelta();
   const dv = this.getDeltaVariance(this.settings.xVariance);
   return cartesian(this.settings.direction)[0] * d + dv;
 };
 
-Sparticle.prototype.getDeltaY = function () {
+Sparticle.prototype.getDeltaY = function() {
   const d = this.getDelta();
   const dv = this.getDeltaVariance(this.settings.yVariance);
   return cartesian(this.settings.direction)[1] * d + dv;
 };
 
-Sparticle.prototype.getDeltaVariance = function (v = 0) {
+Sparticle.prototype.getDeltaVariance = function(v = 0) {
   const s = this.settings.speed || 10;
   if (v > 0) {
     return (random(-v, v) * s) / 100;
@@ -230,7 +230,7 @@ Sparticle.prototype.getDeltaVariance = function (v = 0) {
   }
 };
 
-Sparticle.prototype.getDelta = function () {
+Sparticle.prototype.getDelta = function() {
   let baseDelta = this.settings.speed * 0.1;
   if (this.settings.speed && this.settings.parallax) {
     return baseDelta + (this.size * this.settings.parallax) / 50;
@@ -239,7 +239,7 @@ Sparticle.prototype.getDelta = function () {
   }
 };
 
-Sparticle.prototype.getFloat = function () {
+Sparticle.prototype.getFloat = function() {
   if (!this.settings.float) {
     return 0;
   } else {
@@ -250,7 +250,7 @@ Sparticle.prototype.getFloat = function () {
   }
 };
 
-Sparticle.prototype.getRotation = function () {
+Sparticle.prototype.getRotation = function() {
   let r = 0;
   if (this.settings.rotation) {
     r = radian(random(0.5, 1.5) * this.settings.rotation);
@@ -261,14 +261,14 @@ Sparticle.prototype.getRotation = function () {
   return r;
 };
 
-Sparticle.prototype.update = function () {
+Sparticle.prototype.update = function() {
   this.frame += 1;
   this.updateAlpha();
   this.updatePosition();
   return this;
 };
 
-Sparticle.prototype.updateAlpha = function () {
+Sparticle.prototype.updateAlpha = function() {
   if (this.settings.alphaSpeed > 0) {
     const alphaTick = (this.da / 1000) * this.settings.alphaSpeed * 10;
     this._alpha += alphaTick;
@@ -283,7 +283,7 @@ Sparticle.prototype.updateAlpha = function () {
   }
 };
 
-Sparticle.prototype.updatePosition = function () {
+Sparticle.prototype.updatePosition = function() {
   this.px += this.dx;
   this.py += this.dy;
   this.updateRotate();
@@ -293,11 +293,11 @@ Sparticle.prototype.updatePosition = function () {
   }
 };
 
-Sparticle.prototype.updateRotate = function () {
+Sparticle.prototype.updateRotate = function() {
   this.rotation += this.dr;
 };
 
-Sparticle.prototype.updateFloat = function () {
+Sparticle.prototype.updateFloat = function() {
   if (this.settings.float) {
     if (
       (this.settings.direction > 160 && this.settings.direction < 200) ||
@@ -318,7 +318,7 @@ Sparticle.prototype.updateFloat = function () {
  *
  * @param {HTMLImageElement} [image] an image with a source attribute set
  */
-Sparticle.prototype.render = function (image, images) {
+Sparticle.prototype.render = function(image, images) {
   switch (this.settings.shape) {
     case "image":
       this.renderImage(image, images);
@@ -344,7 +344,7 @@ Sparticle.prototype.render = function (image, images) {
   return this;
 };
 
-Sparticle.prototype.renderStyle = function () {
+Sparticle.prototype.renderStyle = function() {
   this.ctx.globalCompositeOperation = this.settings.composition;
   this.ctx.globalAlpha = this.alpha;
   this.ctx.fillStyle = this.fillColor;
@@ -352,7 +352,7 @@ Sparticle.prototype.renderStyle = function () {
   this.ctx.strokeStyle = this.strokeColor;
 };
 
-Sparticle.prototype.renderColor = function () {
+Sparticle.prototype.renderColor = function() {
   if (this.settings.style === "fill" || this.settings.style === "both") {
     this.ctx.fill();
   }
@@ -361,7 +361,7 @@ Sparticle.prototype.renderColor = function () {
   }
 };
 
-Sparticle.prototype.renderRotate = function () {
+Sparticle.prototype.renderRotate = function() {
   if (this.settings.rotation > 0) {
     const centerX = this.px + this.size / 2;
     const centerY = this.py + this.size / 2;
@@ -371,13 +371,13 @@ Sparticle.prototype.renderRotate = function () {
   }
 };
 
-Sparticle.prototype.renderResetRotate = function () {
+Sparticle.prototype.renderResetRotate = function() {
   if (this.settings.rotation > 0) {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 };
 
-Sparticle.prototype.renderCircle = function () {
+Sparticle.prototype.renderCircle = function() {
   const size = this.size / 2;
   this.renderStyle();
   this.ctx.beginPath();
@@ -385,7 +385,7 @@ Sparticle.prototype.renderCircle = function () {
   this.renderColor();
 };
 
-Sparticle.prototype.renderSquare = function () {
+Sparticle.prototype.renderSquare = function() {
   this.renderRotate();
   this.renderStyle();
   this.ctx.beginPath();
@@ -394,7 +394,7 @@ Sparticle.prototype.renderSquare = function () {
   this.renderResetRotate();
 };
 
-Sparticle.prototype.renderTriangle = function () {
+Sparticle.prototype.renderTriangle = function() {
   const size = this.size;
   const startx = this.px + size / 2;
   const starty = this.py;
@@ -409,7 +409,7 @@ Sparticle.prototype.renderTriangle = function () {
   this.renderResetRotate();
 };
 
-Sparticle.prototype.renderLine = function () {
+Sparticle.prototype.renderLine = function() {
   const size = this.size;
   const startx = this.px;
   const starty = this.py;
@@ -425,7 +425,7 @@ Sparticle.prototype.renderLine = function () {
 /**
  * @param {HTMLImageElement} [image] an image with a source attribute set
  */
-Sparticle.prototype.renderImage = function (image, images) {
+Sparticle.prototype.renderImage = function(image, images) {
   if (image && image.src) {
     const imgCanvas = images[this.fillColor];
     const imgSize = imgCanvas.width;
