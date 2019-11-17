@@ -158,8 +158,8 @@ Sparticle.prototype.init = function() {
   this._alpha = this.alpha;
   this.fillColor = this.getColor();
   this.strokeColor = this.getColor();
-  this.px = random(0, this.canvas.width, true);
-  this.py = random(0, this.canvas.height, true);
+  this.px = random(-this.size * 2, this.canvas.width + this.size, true);
+  this.py = random(-this.size * 2, this.canvas.height + this.size, true);
   this.rotation = _.rotation ? radian(random(0, 360)) : 0;
 };
 
@@ -175,10 +175,10 @@ Sparticle.prototype.setup = function() {
   this.dr = this.getRotation();
 };
 
-Sparticle.prototype.isOffCanvas = function() {
-  const topleft = 0 - this.size * 4;
-  const bottom = this.canvas.height + this.size * 4;
-  const right = this.canvas.width + this.size * 4;
+Sparticle.prototype.isOffCanvas = function () {
+  const topleft = 0 - this.size * 3;
+  const bottom = this.canvas.height + this.size * 3;
+  const right = this.canvas.width + this.size * 3;
   return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
 };
 
