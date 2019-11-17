@@ -1,5 +1,5 @@
-import { random, randomArray, randomHsl, cartesian, clamp, radian, roll } from "./helpers.js";
 import { AnimationFrame } from "./animationFrame.js";
+import { cartesian, clamp, radian, random, randomArray, randomHsl, roll } from "./helpers.js";
 
 /**
  *
