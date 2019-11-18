@@ -34,8 +34,10 @@ export const clamp = (num, min = 0, max = 1) => {
  * @returns {Number} a random number between min and max
  */
 export const random = (min = 0, max = 1, rounded = false) => {
-  let value = max;
-  if ((min !== 0 || max !== 1) && max > min) {
+  let value;
+  if (min === 0 && max === 1) {
+    value = Math.random();
+  } else if (max > min) {
     value = Math.random() * (max - min) + min;
   }
   if (rounded) {
