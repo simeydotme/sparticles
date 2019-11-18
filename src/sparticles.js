@@ -28,6 +28,7 @@ export const Sparticles = function(node, width, height, options) {
     shape: "circle",
     speed: 10,
     style: "fill",
+    twinkle: false,
     xVariance: 2,
     yVariance: 2,
   };
@@ -168,7 +169,7 @@ Sparticle.prototype.setup = function() {
   this.frame = 0;
   this.frameoffset = random(0, 360, true);
   this.size = random(_.minSize, _.maxSize, true);
-  this.da = this.getAlpha();
+  this.da = this.getAlphaDelta();
   this.dx = this.getDeltaX();
   this.dy = this.getDeltaY();
   this.df = this.getFloat();
@@ -204,9 +205,10 @@ Sparticle.prototype.getColor = function() {
   }
 };
 
-Sparticle.prototype.getAlpha = function() {
-  const av = this.settings.alphaVariance;
-  return random(-av, av) / 10;
+Sparticle.prototype.getAlphaDelta = function() {
+  const max = this.settings.twinkle ? 0 : this.settings.alphaVariance;
+  const min = -this.settings.alphaVariance;
+  return random(min, max) / 10;
 };
 
 Sparticle.prototype.getDeltaX = function() {
@@ -263,23 +265,47 @@ Sparticle.prototype.getRotation = function() {
 
 Sparticle.prototype.update = function() {
   this.frame += 1;
-  this.updateAlpha();
   this.updatePosition();
+  this.updateAlpha();
   return this;
 };
 
 Sparticle.prototype.updateAlpha = function() {
+  const tick = (this.da / 1000) * this.settings.alphaSpeed * 10;
   if (this.settings.alphaSpeed > 0) {
-    const alphaTick = (this.da / 1000) * this.settings.alphaSpeed * 10;
-    this._alpha += alphaTick;
-    if (this.da > 0 && this._alpha > this.settings.maxAlpha) {
-      this._alpha = this.settings.maxAlpha;
-      this.da = -this.da;
-    } else if (this.da < 0 && this._alpha < this.settings.minAlpha) {
-      this._alpha = this.settings.minAlpha;
-      this.da = -this.da;
+    if (this.settings.twinkle) {
+      this.updateTwinkle(tick);
+    } else {
+      this.updateFade(tick);
     }
-    this.alpha = clamp(this._alpha, 0, 1);
+  }
+  this.alpha = clamp(this._alpha, 0, 1);
+};
+
+Sparticle.prototype.updateFade = function(tick) {
+  this._alpha += tick;
+  const over = this.da > 0 && this._alpha > this.settings.maxAlpha;
+  const under = this.da < 0 && this._alpha < this.settings.minAlpha;
+  if (over || under) {
+    this.da = -this.da;
+    this._alpha = this.settings.maxAlpha;
+    if (under) {
+      this._alpha = this.settings.minAlpha;
+    }
+  }
+};
+
+Sparticle.prototype.updateTwinkle = function(tick) {
+  this._alpha += tick;
+  const over = this._alpha > this.settings.maxAlpha;
+  const under = this._alpha < this.settings.minAlpha;
+  if (under) {
+    this.resettingTwinkle = true;
+  } else if (over) {
+    this.resettingTwinkle = false;
+  }
+  if (this.resettingTwinkle) {
+    this._alpha += 0.02 * this.settings.alphaSpeed;
   }
 };
 
