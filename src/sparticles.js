@@ -11,11 +11,33 @@ import {
 } from "./helpers.js";
 
 /**
- *
- * @param {HTMLElement} [node]
- * @param {Number} [width]
- * @param {Number} [height]
- * @param {Object} [options]
+ * Sparticles Constructor;
+ * Create a <canvas>, append to the given node, and start the particle effect
+ * @param {HTMLElement} [node] - element to which canvas is appended to
+ * @param {Number} [width] - the width of the canvas element
+ * @param {Number} [height] - the height of the canvas element
+ * @param {Object} [options] - settings to use for the particle effect
+ * @param {String} [options.composition=screen] - canvas globalCompositionOperation value for particles
+ * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
+ * @param {Number} [options.speed=10] - default velocity of every particle
+ * @param {Number} [options.parallax=1] - speed multiplier effect for larger particles (0 = none)
+ * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
+ * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
+ * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
+ * @param {Number} [options.rotation=1] - default rotational speed for every particle
+ * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
+ * @param {Number} [options.alphaVariance=1] - variance in alpha change rate
+ * @param {Number} [options.minAlpha=0] - minumum alpha value of every particle
+ * @param {Number} [options.maxAlpha=1] - maximum alpha value of every particle
+ * @param {Number} [options.minSize=1] - minimum size of every particle
+ * @param {Number} [options.maxSize=10] - maximum size of every particle
+ * @param {String} [options.shape=circle] - shape of particles (one of; circle, square, triangle, line, image)
+ * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
+ * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
+ * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
+ * @param {(String|null)} [options.imageUrl=null] - if style is "image", define an image url (can be data uri)
+ * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
+ * @returns reference to a new Sparticles instance
  */
 export const Sparticles = function(node, width, height, options) {
   const me = this;
