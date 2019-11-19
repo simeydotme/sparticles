@@ -37,7 +37,7 @@ import {
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
  * @param {(String|null)} [options.imageUrl=null] - if style is "image", define an image url (can be data uri)
  * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
- * @returns reference to a new Sparticles instance
+ * @returns - reference to a new Sparticles instance
  */
 export const Sparticles = function(node, width, height, options) {
   const me = this;
@@ -151,7 +151,7 @@ Sparticles.prototype.setupImage = function(callback) {
 Sparticles.prototype.createSparticles = function() {
   this.sparticles = [];
   for (let i = 0; i < this.settings.count; i++) {
-    this.sparticles.push(new Sparticle(this.canvas, this.settings));
+    this.sparticles.push(new Sparticle(this));
   }
   return this.sparticles;
 };
@@ -167,18 +167,19 @@ Sparticles.prototype.render = function(t) {
 // ======================================================= //
 
 /**
- *
- * @param {HTMLElement} canvas the canvas element which the particle will render to
- * @param {Object} settings all the settings for the particle
+ * Sparticle Constructor;
+ * creates an individual particle for use in the Sparticles() class
+ * @param {Object} parent - the parent Sparticles() instance this belongs to
+ * @returns {Object} - reference to a new Sparticles instance
  */
-const Sparticle = function(canvas, settings) {
-  if (canvas && settings) {
-    this.canvas = canvas;
+const Sparticle = function(parent) {
+  if (parent) {
+    this.canvas = parent.canvas;
+    this.settings = parent.settings;
     this.ctx = this.canvas.getContext("2d");
-    this.settings = settings;
     this.init();
   } else {
-    console.warn("invalid parameters given to Sparticle", arguments);
+    console.warn("Invalid parameters given to Sparticle()", arguments);
   }
   return this;
 };
