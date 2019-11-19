@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.3.0
+ * @version 0.4.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  */
@@ -60,12 +60,13 @@ var sparticles = (function (exports) {
   /**
    * Limited Animation Frame method, to allow running
    * a given handler at the maximum desired frame rate.
-   * @param {Number} fps how many frames to render every second
+   * inspired from https://gist.github.com/addyosmani/5434533
    * @param {Function} handler method to execute upon every frame
+   * @param {Number} fps how many frames to render every second
    */
   var AnimationFrame = function AnimationFrame() {
-    var fps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 60;
-    var handler = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
+    var handler = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+    var fps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 60;
     this.fps = fps;
     this.handler = handler;
     var renderId = 0;
@@ -104,36 +105,39 @@ var sparticles = (function (exports) {
     };
   };
 
-  var radian = function radian(angle) {
-    return angle * Math.PI / 180;
-  };
+  /**
+   * return the cartesian x/y delta value from a degree
+   * eg: 90 (→) = [1,0]
+   * @param {Number} angle angle in degrees
+   * @returns {Number[]} cartesian delta values
+   */
   var cartesian = function cartesian(angle) {
     return [Math.cos(radian(angle - 90)), Math.sin(radian(angle - 90))];
   };
   /**
-   * round a Float to the nearest Integer value
-   * @param {Number} num value to round to the nearest integer
-   * @returns {Number} the input num rounded to the nearest integer
-   */
-
-  var round = function round(num) {
-    return 0.5 + num | 0;
-  };
-  /**
    * clamp the input number to the min/max values
-   * @param {Number} num value to clamp between min and max
+   * @param {Number} value value to clamp between min and max
    * @param {Number} min minimum value possible
    * @param {Number} max maximum value possible
    * @returns {Number} the input num clamped between min/max
    */
 
-  var clamp = function clamp(num) {
+  var clamp = function clamp(value) {
     var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-    return Math.max(min, Math.min(max, num));
+    return Math.max(min, Math.min(max, value));
   };
   /**
-   *
+   * return the radian equivalent to a degree value
+   * @param {Number} angle angle in degrees
+   * @returns {Number} radian equivalent
+   */
+
+  var radian = function radian(angle) {
+    return angle * Math.PI / 180;
+  };
+  /**
+   * return random number between a min and max value
    * @param {Number} min minimum value
    * @param {Number} max maximum value
    * @param {Boolean} rounded should the result be rounded
@@ -143,28 +147,32 @@ var sparticles = (function (exports) {
   var random = function random() {
     var min = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var max = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-    var rounded = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-    var value;
+    var value = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : Math.random();
 
-    if (min === 0 && max === 1) {
-      value = Math.random();
-    } else if (max > min) {
-      value = Math.random() * (max - min) + min;
-    }
-
-    if (rounded) {
-      value = round(value);
+    if ((min !== 0 || max !== 1) && max > min) {
+      value = value * (max - min) + min;
     }
 
     return value;
   };
+  /**
+   * return a random value from an array
+   * @param {Array} array an array to get random value from
+   * @returns {*} random value from array
+   */
+
   var randomArray = function randomArray(array) {
     return array[Math.floor(random(0, array.length))];
   };
+  /**
+   * return a random HSL colour string for use in rainbow effect
+   * @returns {String} "hsl(100,100,80)"
+   */
+
   var randomHsl = function randomHsl() {
-    var h = random(0, 360, true);
-    var s = random(90, 100, true);
-    var l = random(45, 85, true);
+    var h = round(random(0, 360));
+    var s = round(random(90, 100));
+    var l = round(random(45, 85));
     return "hsl(".concat(h, ",").concat(s, "%,").concat(l, "%)");
   };
   /**
@@ -176,13 +184,44 @@ var sparticles = (function (exports) {
   var roll = function roll(odds) {
     return odds > random();
   };
+  /**
+   * round a number to the nearest integer value
+   * @param {Number} value value to round to the nearest integer
+   * @returns {Number} nearest integer
+   */
+
+  var round = function round(value) {
+    return 0.5 + value | 0;
+  };
 
   /**
-   *
-   * @param {HTMLElement} [node]
-   * @param {Number} [width]
-   * @param {Number} [height]
-   * @param {Object} [options]
+   * Sparticles Constructor;
+   * Create a <canvas>, append to the given node, and start the particle effect
+   * @param {HTMLElement} [node] - element to which canvas is appended to
+   * @param {Number} [width] - the width of the canvas element
+   * @param {Number} [height] - the height of the canvas element
+   * @param {Object} [options] - settings to use for the particle effect
+   * @param {String} [options.composition=screen] - canvas globalCompositionOperation value for particles
+   * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
+   * @param {Number} [options.speed=10] - default velocity of every particle
+   * @param {Number} [options.parallax=1] - speed multiplier effect for larger particles (0 = none)
+   * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
+   * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
+   * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
+   * @param {Number} [options.rotation=1] - default rotational speed for every particle
+   * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
+   * @param {Number} [options.alphaVariance=1] - variance in alpha change rate
+   * @param {Number} [options.minAlpha=0] - minumum alpha value of every particle
+   * @param {Number} [options.maxAlpha=1] - maximum alpha value of every particle
+   * @param {Number} [options.minSize=1] - minimum size of every particle
+   * @param {Number} [options.maxSize=10] - maximum size of every particle
+   * @param {String} [options.shape=circle] - shape of particles (one of; circle, square, triangle, line, image)
+   * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
+   * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
+   * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
+   * @param {(String|null)} [options.imageUrl=null] - if style is "image", define an image url (can be data uri)
+   * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
+   * @returns - reference to a new Sparticles instance
    */
 
   var Sparticles = function Sparticles(node, width, height, options) {
@@ -228,7 +267,7 @@ var sparticles = (function (exports) {
     var me = this;
 
     if (!this.loop) {
-      this.loop = new AnimationFrame(60, function (t) {
+      this.loop = new AnimationFrame(function (t) {
         me.render(t);
       });
     }
@@ -306,7 +345,7 @@ var sparticles = (function (exports) {
     this.sparticles = [];
 
     for (var i = 0; i < this.settings.count; i++) {
-      this.sparticles.push(new Sparticle(this.canvas, this.settings));
+      this.sparticles.push(new Sparticle(this));
     }
 
     return this.sparticles;
@@ -342,20 +381,21 @@ var sparticles = (function (exports) {
   }; // ======================================================= //
 
   /**
-   *
-   * @param {HTMLElement} canvas the canvas element which the particle will render to
-   * @param {Object} settings all the settings for the particle
+   * Sparticle Constructor;
+   * creates an individual particle for use in the Sparticles() class
+   * @param {Object} parent - the parent Sparticles() instance this belongs to
+   * @returns {Object} - reference to a new Sparticles instance
    */
 
 
-  var Sparticle = function Sparticle(canvas, settings) {
-    if (canvas && settings) {
-      this.canvas = canvas;
+  var Sparticle = function Sparticle(parent) {
+    if (parent) {
+      this.canvas = parent.canvas;
+      this.settings = parent.settings;
       this.ctx = this.canvas.getContext("2d");
-      this.settings = settings;
       this.init();
     } else {
-      console.warn("invalid parameters given to Sparticle", arguments);
+      console.warn("Invalid parameters given to Sparticle()", arguments);
     }
 
     return this;
@@ -368,16 +408,16 @@ var sparticles = (function (exports) {
     this._alpha = this.alpha;
     this.fillColor = this.getColor();
     this.strokeColor = this.getColor();
-    this.px = random(-this.size * 2, this.canvas.width + this.size, true);
-    this.py = random(-this.size * 2, this.canvas.height + this.size, true);
+    this.px = round(random(-this.size * 2, this.canvas.width + this.size));
+    this.py = round(random(-this.size * 2, this.canvas.height + this.size));
     this.rotation = _.rotation ? radian(random(0, 360)) : 0;
   };
 
   Sparticle.prototype.setup = function () {
     var _ = this.settings;
     this.frame = 0;
-    this.frameoffset = random(0, 360, true);
-    this.size = random(_.minSize, _.maxSize, true);
+    this.frameoffset = round(random(0, 360));
+    this.size = round(random(_.minSize, _.maxSize));
     this.da = this.getAlphaDelta();
     this.dx = this.getDeltaX();
     this.dy = this.getDeltaY();
