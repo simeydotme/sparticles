@@ -1,10 +1,11 @@
 /**
  * Limited Animation Frame method, to allow running
  * a given handler at the maximum desired frame rate.
- * @param {Number} fps how many frames to render every second
+ * inspired from https://gist.github.com/addyosmani/5434533
  * @param {Function} handler method to execute upon every frame
+ * @param {Number} fps how many frames to render every second
  */
-export const AnimationFrame = function(fps = 60, handler = () => {}) {
+export const AnimationFrame = function(handler = () => {}, fps = 60) {
   this.fps = fps;
   this.handler = handler;
   let renderId = 0;

@@ -50,7 +50,7 @@ export const Sparticles = function(node, width, height, options) {
 Sparticles.prototype.start = function() {
   const me = this;
   if (!this.loop) {
-    this.loop = new AnimationFrame(60, t => {
+    this.loop = new AnimationFrame(t => {
       me.render(t);
     });
   }
