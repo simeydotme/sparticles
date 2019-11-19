@@ -1,5 +1,14 @@
 import { AnimationFrame } from "./animationFrame.js";
-import { cartesian, clamp, radian, random, randomArray, randomHsl, roll } from "./helpers.js";
+import {
+  cartesian,
+  clamp,
+  radian,
+  random,
+  randomArray,
+  randomHsl,
+  roll,
+  round,
+} from "./helpers.js";
 
 /**
  *
@@ -159,16 +168,16 @@ Sparticle.prototype.init = function() {
   this._alpha = this.alpha;
   this.fillColor = this.getColor();
   this.strokeColor = this.getColor();
-  this.px = random(-this.size * 2, this.canvas.width + this.size, true);
-  this.py = random(-this.size * 2, this.canvas.height + this.size, true);
+  this.px = round(random(-this.size * 2, this.canvas.width + this.size));
+  this.py = round(random(-this.size * 2, this.canvas.height + this.size));
   this.rotation = _.rotation ? radian(random(0, 360)) : 0;
 };
 
 Sparticle.prototype.setup = function() {
   const _ = this.settings;
   this.frame = 0;
-  this.frameoffset = random(0, 360, true);
-  this.size = random(_.minSize, _.maxSize, true);
+  this.frameoffset = round(random(0, 360));
+  this.size = round(random(_.minSize, _.maxSize));
   this.da = this.getAlphaDelta();
   this.dx = this.getDeltaX();
   this.dy = this.getDeltaY();
