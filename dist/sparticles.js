@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.4.0
+ * @version 0.5.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  */
@@ -78,22 +78,25 @@ var sparticles = (function (exports) {
     this.start = function () {
       var _this = this;
 
-      var then = performance.now();
-      var interval = 1000 / this.fps;
-      var tolerance = 0;
+      if (!this.started) {
+        var then = performance.now();
+        var interval = 1000 / this.fps;
+        var tolerance = 0;
 
-      var loop = function loop(now) {
-        var delta = now - then;
+        var loop = function loop(now) {
+          var delta = now - then;
+          renderId = requestAnimationFrame(loop);
+
+          if (delta >= interval - tolerance) {
+            _this.handler(delta);
+
+            then = now - delta % interval;
+          }
+        };
+
         renderId = requestAnimationFrame(loop);
-
-        if (delta >= interval - tolerance) {
-          _this.handler(delta);
-
-          then = now - delta % interval;
-        }
-      };
-
-      renderId = requestAnimationFrame(loop);
+        this.started = true;
+      }
     };
     /**
      * stop the currently running animation loop
@@ -102,6 +105,7 @@ var sparticles = (function (exports) {
 
     this.stop = function () {
       cancelAnimationFrame(renderId);
+      this.started = false;
     };
   };
 
@@ -198,8 +202,6 @@ var sparticles = (function (exports) {
    * Sparticles Constructor;
    * Create a <canvas>, append to the given node, and start the particle effect
    * @param {HTMLElement} [node] - element to which canvas is appended to
-   * @param {Number} [width] - the width of the canvas element
-   * @param {Number} [height] - the height of the canvas element
    * @param {Object} [options] - settings to use for the particle effect
    * @param {String} [options.composition=screen] - canvas globalCompositionOperation value for particles
    * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
@@ -219,13 +221,18 @@ var sparticles = (function (exports) {
    * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
    * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
    * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
-   * @param {(String|null)} [options.imageUrl=null] - if style is "image", define an image url (can be data uri)
+   * @param {String} [options.imageUrl=] - if style is "image", define an image url (can be data-uri, must be square (1:1 ratio))
    * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
+   * @param {Number} [width] - the width of the canvas element
+   * @param {Number} [height] - the height of the canvas element
    * @returns - reference to a new Sparticles instance
    */
 
-  var Sparticles = function Sparticles(node, width, height, options) {
-    var me = this;
+  var Sparticles = function Sparticles() {
+    var node = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.body;
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var width = arguments.length > 2 ? arguments[2] : undefined;
+    var height = arguments.length > 3 ? arguments[3] : undefined;
     var defaults = {
       alphaSpeed: 10,
       alphaVariance: 1,
@@ -234,7 +241,7 @@ var sparticles = (function (exports) {
       count: 50,
       direction: 180,
       float: 1,
-      imageUrl: null,
+      imageUrl: "",
       maxAlpha: 1,
       maxSize: 10,
       minAlpha: 0,
@@ -248,20 +255,28 @@ var sparticles = (function (exports) {
       xVariance: 2,
       yVariance: 2
     };
-    this.el = node || document.body;
+    this.el = node;
     this.width = width || this.el.clientWidth;
     this.height = height || this.el.clientHeight;
-    this.options = options || {};
+    this.settings = _objectSpread2({}, defaults, {}, options);
+    this.init();
+    return this;
+  };
+
+  Sparticles.prototype.init = function () {
+    var me = this;
     this.sparticles = [];
-    this.settings = _objectSpread2({}, defaults, {}, this.options);
     this.setupColors();
     this.setupCanvas();
     this.setupImage(function () {
       me.createSparticles();
       me.start();
     });
-    return this;
   };
+  /**
+   * start/resume the sparticles animation
+   */
+
 
   Sparticles.prototype.start = function () {
     var me = this;
@@ -274,22 +289,52 @@ var sparticles = (function (exports) {
 
     this.loop.start();
   };
+  /**
+   * stop/pause the sparticles animation
+   */
+
 
   Sparticles.prototype.stop = function () {
     this.loop.stop();
   };
 
+  Sparticles.prototype.destroy = function () {
+    this.stop();
+    this.sparticles = null;
+    this.start = null;
+    this.stop = null;
+    this.init = null;
+    this.settings = null;
+    this.el.removeChild(this.canvas);
+  };
+  /**
+   * convert the input colors to an array if it isn't already
+   * @returns {Array} - array of colors for use in rendering
+   */
+
+
   Sparticles.prototype.setupColors = function () {
-    var colors = 50;
+    if (!Array.isArray(this.settings.color)) {
+      if (this.settings.color === "rainbow") {
+        var colors = 50;
+        this.settings.color = [];
 
-    if (this.settings.color === "rainbow") {
-      this.settings.color = [];
-
-      for (var i = 0; i < colors; i++) {
-        this.settings.color[i] = randomHsl();
+        for (var i = 0; i < colors; i++) {
+          this.settings.color[i] = randomHsl();
+        }
+      } else {
+        this.settings.color = [this.settings.color];
       }
     }
+
+    return this.settings.color;
   };
+  /**
+   * set up the canvas and bind to a property for
+   * access later on, append it to the DOM
+   * @returns {HTMLCanvasElement} - the canvas element which was appended to DOM
+   */
+
 
   Sparticles.prototype.setupCanvas = function () {
     this.canvas = document.createElement("canvas");
@@ -297,10 +342,49 @@ var sparticles = (function (exports) {
     this.canvas.width = this.width;
     this.canvas.height = this.height;
     this.el.appendChild(this.canvas);
-    this.context = this.canvas.getContext("2d");
+    return this.canvas;
   };
+  /**
+   * attempt to laod the image given in options and after loading
+   * set up a new canvas for each color overlaid on the the image
+   * @param {Function} [callback] - function to execute after image loads
+   * @returns {HTMLImageElement} - the image which was loaded
+   */
 
-  Sparticles.prototype.getImageCanvas = function (color) {
+
+  Sparticles.prototype.setupImage = function (callback) {
+    if (this.settings.shape === "image" && this.settings.imageUrl) {
+      var me = this;
+      this.image = new Image();
+
+      this.image.onload = function () {
+        me.settings.color.forEach(function (c) {
+          me.setupImageCanvas(c);
+        });
+        if (callback) callback();
+      };
+
+      this.image.onerror = function () {
+        console.error("failed to load source image");
+      };
+
+      this.image.src = this.settings.imageUrl;
+    } else {
+      if (callback) callback();
+    }
+
+    return this.image;
+  };
+  /**
+   * set up a new canvas element for the given color parameter,
+   * this creates a new property in the `this.images` object under
+   * the given color which holds an offscreen canvas for rendering each particle.
+   * @param {String} color - the color value which we create a offscreen canvas for
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.setupImageCanvas = function (color) {
     var imgSize = this.image.width;
     this.images = this.images || {};
     this.images[color] = document.createElement("canvas");
@@ -311,35 +395,14 @@ var sparticles = (function (exports) {
     this.imgCtx.globalCompositeOperation = "source-atop";
     this.imgCtx.fillStyle = color;
     this.imgCtx.fillRect(0, 0, imgSize, imgSize);
+    return this.images[color];
   };
+  /**
+   * create an array, and then loop through to the count
+   * value and populate the array with new Sparticle instances.
+   * @returns {Array} the array of Sparticle instances
+   */
 
-  Sparticles.prototype.setupImage = function (callback) {
-    if (this.settings.shape === "image" && this.settings.imageUrl) {
-      var me = this;
-      this.images = {};
-      this.image = new Image();
-
-      this.image.onload = function () {
-        if (Array.isArray(me.settings.color)) {
-          me.settings.color.forEach(function (c) {
-            me.getImageCanvas(c);
-          });
-        } else {
-          me.getImageCanvas(me.settings.color);
-        }
-
-        callback();
-      };
-
-      this.image.onerror = function () {
-        console.error("failed to load source image");
-      };
-
-      this.image.src = this.settings.imageUrl;
-    } else {
-      callback();
-    }
-  };
 
   Sparticles.prototype.createSparticles = function () {
     this.sparticles = [];
@@ -350,8 +413,14 @@ var sparticles = (function (exports) {
 
     return this.sparticles;
   };
+  /**
+   * wipe the canvas, update each particle, and then render
+   * each particle to the canvas
+   * @returns {Array} the array of Sparticle instances
+   */
 
-  Sparticles.prototype.render = function (t) {
+
+  Sparticles.prototype.render = function () {
     this.ctx.clearRect(0, 0, this.width, this.height);
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
@@ -378,7 +447,10 @@ var sparticles = (function (exports) {
     }
 
     return this.sparticles;
-  }; // ======================================================= //
+  };
+  /**
+   * ============================================================================
+   */
 
   /**
    * Sparticle Constructor;
@@ -400,18 +472,33 @@ var sparticles = (function (exports) {
 
     return this;
   };
+  /**
+   * initialise a particle with the default values from
+   * the Sparticles instance settings.
+   * these values do not change when the particle goes offscreen
+   */
+
 
   Sparticle.prototype.init = function () {
-    var _ = this.settings;
     this.setup();
-    this.alpha = random(_.minAlpha, _.maxAlpha);
+    this.alpha = random(this.settings.minAlpha, this.settings.maxAlpha);
     this._alpha = this.alpha;
     this.fillColor = this.getColor();
     this.strokeColor = this.getColor();
     this.px = round(random(-this.size * 2, this.canvas.width + this.size));
     this.py = round(random(-this.size * 2, this.canvas.height + this.size));
-    this.rotation = _.rotation ? radian(random(0, 360)) : 0;
+    this.rotation = this.settings.rotation ? radian(random(0, 360)) : 0;
+
+    if (this.settings.shape === "line") {
+      this.curve = random(0.1, 1);
+    }
   };
+  /**
+   * set up the particle with some random values
+   * before it is initialised on the canvas
+   * these values will randomize when the particle goes offscreen
+   */
+
 
   Sparticle.prototype.setup = function () {
     var _ = this.settings;
@@ -421,9 +508,14 @@ var sparticles = (function (exports) {
     this.da = this.getAlphaDelta();
     this.dx = this.getDeltaX();
     this.dy = this.getDeltaY();
-    this.df = this.getFloat();
-    this.dr = this.getRotation();
+    this.df = this.getFloatDelta();
+    this.dr = this.getRotationDelta();
   };
+  /**
+   * check if the particle is off the canvas or not
+   * @returns {Boolean} is the particle completely off canvas
+   */
+
 
   Sparticle.prototype.isOffCanvas = function () {
     var topleft = 0 - this.size * 3;
@@ -495,7 +587,7 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.getFloat = function () {
+  Sparticle.prototype.getFloatDelta = function () {
     if (!this.settings.float) {
       return 0;
     } else {
@@ -503,7 +595,7 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.getRotation = function () {
+  Sparticle.prototype.getRotationDelta = function () {
     var r = 0;
 
     if (this.settings.rotation) {
@@ -570,13 +662,13 @@ var sparticles = (function (exports) {
   };
 
   Sparticle.prototype.updatePosition = function () {
-    this.px += this.dx;
-    this.py += this.dy;
-    this.updateRotate();
-    this.updateFloat();
-
     if (this.isOffCanvas()) {
       this.reset();
+    } else {
+      this.px += this.dx;
+      this.py += this.dy;
+      this.updateRotate();
+      this.updateFloat();
     }
   };
 
@@ -585,7 +677,7 @@ var sparticles = (function (exports) {
   };
 
   Sparticle.prototype.updateFloat = function () {
-    if (this.settings.float) {
+    if (this.settings.float && this.settings.speed) {
       if (this.settings.direction > 160 && this.settings.direction < 200 || this.settings.direction > 340 && this.settings.direction < 380 || this.settings.direction > -20 && this.settings.direction < 20) {
         this.px += cartesian(this.frame + this.frameoffset)[0] * this.df / (this.getDelta() * 15);
       } else if (this.settings.direction > 70 && this.settings.direction < 110 || this.settings.direction > 250 && this.settings.direction < 290) {
@@ -630,7 +722,7 @@ var sparticles = (function (exports) {
     this.ctx.globalCompositeOperation = this.settings.composition;
     this.ctx.globalAlpha = this.alpha;
     this.ctx.fillStyle = this.fillColor;
-    this.ctx.lineWidth = clamp(this.size / 10, 1, 5);
+    this.ctx.lineWidth = clamp(this.size / 20, 1, 5);
     this.ctx.strokeStyle = this.strokeColor;
   };
 
@@ -681,12 +773,13 @@ var sparticles = (function (exports) {
     var size = this.size;
     var startx = this.px + size / 2;
     var starty = this.py;
+    var height = size * (Math.sqrt(3) / 2);
     this.renderRotate();
     this.renderStyle();
     this.ctx.beginPath();
     this.ctx.moveTo(startx, starty);
-    this.ctx.lineTo(startx + size / 2, starty + size - 1);
-    this.ctx.lineTo(startx - size / 2, starty + size - 1);
+    this.ctx.lineTo(startx - size / 2, starty + height);
+    this.ctx.lineTo(startx + size / 2, starty + height);
     this.ctx.closePath();
     this.renderColor();
     this.renderResetRotate();
@@ -696,11 +789,13 @@ var sparticles = (function (exports) {
     var size = this.size;
     var startx = this.px;
     var starty = this.py;
+    var curvex = 1 - this.curve;
+    var curvey = 0 + this.curve;
     this.renderRotate();
     this.renderStyle();
     this.ctx.beginPath();
     this.ctx.moveTo(startx, starty);
-    this.ctx.lineTo(startx + size, starty + size);
+    this.ctx.quadraticCurveTo(startx + size * curvex, starty + size * curvey, startx + size, starty + size);
     this.ctx.stroke();
     this.renderResetRotate();
   };
