@@ -21,29 +21,29 @@ nav {
   left: 10px;
 }
 
-ul {
+nav ul {
   list-style: none;
 }
 
-li {
+nav li {
   margin: 0 10px 0 -2px;
   padding: 0 10px 0 0;
   display: inline-block;
 }
 
-li:not(:last-child) {
+nav li:not(:last-child) {
   border-right: 1px solid white;
 }
 
-a {
+nav a {
   color: rgba(255, 255, 255, 0.6);
   line-height: 1.4;
   display: inline-block;
 }
 
-a.current,
-a:hover,
-a:active,
-a:focus {
+nav a.current,
+nav a:hover,
+nav a:active,
+nav a:focus {
   color: white;
 }
