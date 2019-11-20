@@ -15,20 +15,23 @@ export const AnimationFrame = function(handler = () => {}, fps = 60) {
    * to the instance in the constructor
    */
   this.start = function() {
-    let then = performance.now();
-    const interval = 1000 / this.fps;
-    const tolerance = 0;
+    if (!this.started) {
+      let then = performance.now();
+      const interval = 1000 / this.fps;
+      const tolerance = 0;
 
-    const loop = now => {
-      const delta = now - then;
+      const loop = now => {
+        const delta = now - then;
+        renderId = requestAnimationFrame(loop);
+        if (delta >= interval - tolerance) {
+          this.handler(delta);
+          then = now - (delta % interval);
+        }
+      };
+
       renderId = requestAnimationFrame(loop);
-      if (delta >= interval - tolerance) {
-        this.handler(delta);
-        then = now - (delta % interval);
-      }
-    };
-
-    renderId = requestAnimationFrame(loop);
+      this.started = true;
+    }
   };
 
   /**
@@ -36,6 +39,7 @@ export const AnimationFrame = function(handler = () => {}, fps = 60) {
    */
   this.stop = function() {
     cancelAnimationFrame(renderId);
+    this.started = false;
   };
 };
 
