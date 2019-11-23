@@ -25,7 +25,7 @@ let options = {
   minSize: 1,
   parallax: 1,
   rotation: 1,
-  shape: "circle",
+  shape: "line",
   speed: 0,
   style: "fill",
   twinkle: false,
@@ -89,7 +89,7 @@ window.initGui = function() {
   ];
   const rerender = () => {
     s.setupColors();
-    s.setupImage(function() {
+    s.setupSparticleColors(function() {
       s.createSparticles();
     });
   };

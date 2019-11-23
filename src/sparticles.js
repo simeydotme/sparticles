@@ -75,7 +75,7 @@ Sparticles.prototype.init = function() {
   this.sparticles = [];
   this.setupColors();
   this.setupCanvas();
-  this.setupImage(function() {
+  this.setupSparticleColors(function() {
     me.createSparticles();
     me.start();
   });
@@ -149,26 +149,46 @@ Sparticles.prototype.setupCanvas = function() {
  * attempt to laod the image given in options and after loading
  * set up a new canvas for each color overlaid on the the image
  * @param {Function} [callback] - function to execute after image loads
- * @returns {HTMLImageElement} - the image which was loaded
  */
-Sparticles.prototype.setupImage = function(callback) {
-  if (this.settings.shape === "image" && this.settings.imageUrl) {
-    const me = this;
+Sparticles.prototype.setupSparticleColors = function(callback) {
+  const me = this;
+  const isImage = this.settings.shape === "image" && this.settings.imageUrl;
+  const createColorCanvases = () => {
+    this.settings.color.forEach(c => {
+      this.setupSparticleCanvas(c);
+    });
+    if (callback) callback();
+  };
+
+  if (isImage) {
     this.image = new Image();
     this.image.onload = function() {
-      me.settings.color.forEach(c => {
-        me.setupImageCanvas(c);
-      });
-      if (callback) callback();
+      createColorCanvases();
     };
     this.image.onerror = function() {
       console.error("failed to load source image");
     };
     this.image.src = this.settings.imageUrl;
   } else {
-    if (callback) callback();
+    createColorCanvases();
   }
-  return this.image;
+};
+
+Sparticles.prototype.renderStyle = function(ctx, color = "white", lineSize = 0) {
+  if (this.settings.style === "fill") {
+    ctx.fillStyle = color;
+  } else {
+    ctx.lineWidth = lineSize;
+    ctx.strokeStyle = color;
+  }
+};
+
+Sparticles.prototype.renderColor = function(ctx) {
+  if (this.settings.style === "fill") {
+    ctx.fill();
+  } else {
+    ctx.stroke();
+  }
 };
 
 /**
@@ -178,18 +198,117 @@ Sparticles.prototype.setupImage = function(callback) {
  * @param {String} color - the color value which we create a offscreen canvas for
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.setupImageCanvas = function(color) {
-  const imgSize = this.image.width;
+Sparticles.prototype.setupSparticleCanvas = function(color = "white") {
   this.images = this.images || {};
   this.images[color] = document.createElement("canvas");
-  this.images[color].width = imgSize;
-  this.images[color].height = imgSize;
-  this.imgCtx = this.images[color].getContext("2d");
-  this.imgCtx.drawImage(this.image, 0, 0, imgSize, imgSize, 0, 0, imgSize, imgSize);
-  this.imgCtx.globalCompositeOperation = "source-atop";
-  this.imgCtx.fillStyle = color;
-  this.imgCtx.fillRect(0, 0, imgSize, imgSize);
+  const ctx = this.images[color].getContext("2d");
+  const isImage = this.settings.shape === "image" && this.settings.imageUrl;
+
+  switch (this.settings.shape) {
+    case "image":
+      this.setupImageCanvas(ctx, color);
+      break;
+
+    case "square":
+      this.setupSquareCanvas(ctx, color);
+      break;
+
+    case "line":
+      this.setupLineCanvas(ctx, color);
+      break;
+
+    case "triangle":
+      this.setupTriangleCanvas(ctx, color);
+      break;
+
+    case "circle":
+    default:
+      this.setupCircleCanvas(ctx, color);
+      break;
+  }
+
   return this.images[color];
+};
+
+Sparticles.prototype.setupImageCanvas = function(ctx, color = "white") {
+  const size = this.image.width;
+  this.images[color].width = size;
+  this.images[color].height = size;
+  ctx.drawImage(this.image, 0, 0, size, size, 0, 0, size, size);
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, size, size);
+};
+
+Sparticles.prototype.setupCircleCanvas = function(ctx, color = "white") {
+  const size = this.settings.maxSize;
+  const shadowSize = clamp(size / 5, 3, 8);
+  const lineSize = clamp(size / 20, 1, 5);
+  const canvasSize = size + lineSize + shadowSize + 5;
+  this.images[color].width = canvasSize;
+  this.images[color].height = canvasSize;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = shadowSize;
+  this.renderStyle(ctx, color, lineSize);
+  ctx.beginPath();
+  ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
+  this.renderColor(ctx, color);
+};
+
+Sparticles.prototype.setupSquareCanvas = function(ctx, color = "white") {
+  const size = this.settings.maxSize;
+  const shadowSize = clamp(size / 5, 3, 8);
+  const lineSize = clamp(size / 20, 1, 5);
+  const canvasSize = size + lineSize + shadowSize + 5;
+  this.images[color].width = canvasSize;
+  this.images[color].height = canvasSize;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = shadowSize;
+  this.renderStyle(ctx, color, lineSize);
+  ctx.beginPath();
+  ctx.rect(canvasSize / 2 - size / 2, canvasSize / 2 - size / 2, size, size);
+  this.renderColor(ctx, color);
+};
+
+Sparticles.prototype.setupTriangleCanvas = function(ctx, color = "white") {
+  const size = this.settings.maxSize;
+  const shadowSize = clamp(size / 5, 3, 8);
+  const lineSize = clamp(size / 20, 1, 5);
+  const canvasSize = size + lineSize + shadowSize + 5;
+  const height = size * (Math.sqrt(3) / 2);
+  const startx = canvasSize / 2;
+  const starty = canvasSize / 2 - size / 2;
+  this.images[color].width = canvasSize;
+  this.images[color].height = canvasSize;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = shadowSize;
+  this.renderStyle(ctx, color, lineSize);
+  ctx.beginPath();
+  ctx.moveTo(startx, starty);
+  ctx.lineTo(startx - size / 2, starty + height);
+  ctx.lineTo(startx + size / 2, starty + height);
+  ctx.closePath();
+  this.renderColor(ctx, color);
+};
+
+Sparticles.prototype.setupLineCanvas = function(ctx, color = "white") {
+  const size = this.settings.maxSize * 2;
+  const shadowSize = clamp(size / 5, 3, 8);
+  const lineSize = clamp(size / 20, 1, 5);
+  const canvasSize = size + lineSize + shadowSize + 5;
+  const startx = canvasSize / 2 - size / 2;
+  const starty = canvasSize / 2 - size / 2;
+  this.images[color].width = canvasSize;
+  this.images[color].height = canvasSize;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = shadowSize;
+  ctx.lineWidth = lineSize;
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(startx, starty);
+  ctx.lineTo(startx + size, starty + size);
+  ctx.stroke();
+  ctx.closePath();
 };
 
 /**
@@ -213,7 +332,7 @@ Sparticles.prototype.createSparticles = function() {
 Sparticles.prototype.render = function() {
   this.ctx.clearRect(0, 0, this.width, this.height);
   for (const sparticle of this.sparticles) {
-    sparticle.update().render(this.image, this.images);
+    sparticle.update().render(this.images);
   }
   return this.sparticles;
 };
@@ -445,54 +564,18 @@ Sparticle.prototype.updateFloat = function() {
   }
 };
 
-/**
- *
- * @param {HTMLImageElement} [image] an image with a source attribute set
- */
-Sparticle.prototype.render = function(image, images) {
-  switch (this.settings.shape) {
-    case "image":
-      this.renderImage(image, images);
-      break;
-
-    case "square":
-      this.renderSquare();
-      break;
-
-    case "line":
-      this.renderLine();
-      break;
-
-    case "triangle":
-      this.renderTriangle();
-      break;
-
-    case "circle":
-    default:
-      this.renderCircle();
-      break;
-  }
-  return this;
-};
-
-Sparticle.prototype.renderStyle = function() {
+Sparticle.prototype.render = function(images) {
+  const imgCanvas = images[this.fillColor];
+  const imgSize = imgCanvas.width;
+  const scale = this.size / imgSize;
+  const px = this.px / scale;
+  const py = this.py / scale;
+  this.renderRotate();
   this.ctx.globalAlpha = this.alpha;
-  if (this.settings.style === "fill" || this.settings.style === "both") {
-    this.ctx.fillStyle = this.fillColor;
-  }
-  if (this.settings.style === "stroke" || this.settings.style === "both") {
-    this.ctx.lineWidth = clamp(this.size / 20, 1, 5);
-    this.ctx.strokeStyle = this.strokeColor;
-  }
-};
-
-Sparticle.prototype.renderColor = function() {
-  if (this.settings.style === "fill" || this.settings.style === "both") {
-    this.ctx.fill();
-  }
-  if (this.settings.style === "stroke" || this.settings.style === "both") {
-    this.ctx.stroke();
-  }
+  this.ctx.transform(scale, 0, 0, scale, 0, 0);
+  this.ctx.drawImage(imgCanvas, 0, 0, imgSize, imgSize, px, py, imgSize, imgSize);
+  this.renderResetRotate();
+  return this;
 };
 
 Sparticle.prototype.renderRotate = function() {
@@ -507,77 +590,6 @@ Sparticle.prototype.renderRotate = function() {
 
 Sparticle.prototype.renderResetRotate = function() {
   if (this.settings.rotation > 0) {
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-};
-
-Sparticle.prototype.renderCircle = function() {
-  const size = this.size / 2;
-  this.renderStyle();
-  this.ctx.beginPath();
-  this.ctx.ellipse(this.px, this.py, size, size, 0, 0, 360);
-  this.renderColor();
-};
-
-Sparticle.prototype.renderSquare = function() {
-  this.renderRotate();
-  this.renderStyle();
-  this.ctx.beginPath();
-  this.ctx.rect(this.px, this.py, this.size, this.size);
-  this.renderColor();
-  this.renderResetRotate();
-};
-
-Sparticle.prototype.renderTriangle = function() {
-  const size = this.size;
-  const startx = this.px + size / 2;
-  const starty = this.py;
-  const height = size * (Math.sqrt(3) / 2);
-  this.renderRotate();
-  this.renderStyle();
-  this.ctx.beginPath();
-  this.ctx.moveTo(startx, starty);
-  this.ctx.lineTo(startx - size / 2, starty + height);
-  this.ctx.lineTo(startx + size / 2, starty + height);
-  this.ctx.closePath();
-  this.renderColor();
-  this.renderResetRotate();
-};
-
-Sparticle.prototype.renderLine = function() {
-  const size = this.size;
-  const startx = this.px;
-  const starty = this.py;
-  const curvex = 1 - this.curve;
-  const curvey = 0 + this.curve;
-  this.renderRotate();
-  this.renderStyle();
-  this.ctx.beginPath();
-  this.ctx.moveTo(startx, starty);
-  this.ctx.quadraticCurveTo(
-    startx + size * curvex,
-    starty + size * curvey,
-    startx + size,
-    starty + size
-  );
-  this.ctx.stroke();
-  this.renderResetRotate();
-};
-
-/**
- * @param {HTMLImageElement} [image] an image with a source attribute set
- */
-Sparticle.prototype.renderImage = function(image, images) {
-  if (image && image.src) {
-    const imgCanvas = images[this.fillColor];
-    const imgSize = imgCanvas.width;
-    const scale = this.size / imgSize;
-    const px = this.px / scale;
-    const py = this.py / scale;
-    this.renderRotate();
-    this.ctx.globalAlpha = this.alpha;
-    this.ctx.transform(scale, 0, 0, scale, 0, 0);
-    this.ctx.drawImage(imgCanvas, 0, 0, imgSize, imgSize, px, py, imgSize, imgSize);
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 };
