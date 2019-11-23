@@ -138,6 +138,7 @@ Sparticles.prototype.setupColors = function() {
 Sparticles.prototype.setupCanvas = function() {
   this.canvas = document.createElement("canvas");
   this.ctx = this.canvas.getContext("2d");
+  this.ctx.globalCompositeOperation = this.settings.composition;
   this.canvas.width = this.width;
   this.canvas.height = this.height;
   this.el.appendChild(this.canvas);
@@ -475,11 +476,14 @@ Sparticle.prototype.render = function(image, images) {
 };
 
 Sparticle.prototype.renderStyle = function() {
-  this.ctx.globalCompositeOperation = this.settings.composition;
   this.ctx.globalAlpha = this.alpha;
-  this.ctx.fillStyle = this.fillColor;
-  this.ctx.lineWidth = clamp(this.size / 20, 1, 5);
-  this.ctx.strokeStyle = this.strokeColor;
+  if (this.settings.style === "fill" || this.settings.style === "both") {
+    this.ctx.fillStyle = this.fillColor;
+  }
+  if (this.settings.style === "stroke" || this.settings.style === "both") {
+    this.ctx.lineWidth = clamp(this.size / 20, 1, 5);
+    this.ctx.strokeStyle = this.strokeColor;
+  }
 };
 
 Sparticle.prototype.renderColor = function() {
@@ -571,7 +575,6 @@ Sparticle.prototype.renderImage = function(image, images) {
     const px = this.px / scale;
     const py = this.py / scale;
     this.renderRotate();
-    this.ctx.globalCompositeOperation = this.settings.composition;
     this.ctx.globalAlpha = this.alpha;
     this.ctx.transform(scale, 0, 0, scale, 0, 0);
     this.ctx.drawImage(imgCanvas, 0, 0, imgSize, imgSize, px, py, imgSize, imgSize);
