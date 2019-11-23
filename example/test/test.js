@@ -14,18 +14,19 @@ let options = {
   alphaSpeed: 10,
   alphaVariance: 1,
   color: [colors.color1, colors.color2, colors.color3, colors.color4],
-  composition: "screen",
+  composition: "source-over",
   count: 100,
   direction: 180,
   float: 1,
+  glow: 20,
   imageUrl: "",
   maxAlpha: 1,
-  maxSize: 10,
+  maxSize: 40,
   minAlpha: 0,
-  minSize: 1,
+  minSize: 10,
   parallax: 1,
   rotation: 1,
-  shape: "line",
+  shape: ["triangle","square","circle"],
   speed: 0,
   style: "fill",
   twinkle: false,
@@ -89,6 +90,7 @@ window.initGui = function() {
   ];
   const rerender = () => {
     s.setupColors();
+    s.setupShapes();
     s.setupSparticleColors(function() {
       s.createSparticles();
     });
@@ -126,6 +128,7 @@ window.initGui = function() {
   move.add(s.settings, "xVariance", 0, 10, 0.1).onFinishChange(rerender);
   move.add(s.settings, "yVariance", 0, 10, 0.1).onFinishChange(rerender);
   const vis = gui.addFolder("Visual");
+  vis.add(s.settings, "glow", 0,50).onFinishChange(rerender);
   vis.add(s.settings, "composition", composites).onFinishChange(rerender);
   const alpha = vis.addFolder("Alpha");
   alpha.add(s.settings, "twinkle").onFinishChange(rerender);
