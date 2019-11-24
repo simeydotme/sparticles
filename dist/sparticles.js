@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.6.0
+ * @version 0.6.1
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  */
@@ -199,439 +199,11 @@ var sparticles = (function (exports) {
   };
 
   /**
-   * Sparticles Constructor;
-   * Create a <canvas>, append to the given node, and start the particle effect
-   * @param {HTMLElement} [node] - element to which canvas is appended to
-   * @param {Object} [options] - settings to use for the particle effect
-   * @param {String} [options.composition=source-over] - canvas globalCompositeOperation value for particles
-   * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
-   * @param {Number} [options.speed=10] - default velocity of every particle
-   * @param {Number} [options.parallax=1] - speed multiplier effect for larger particles (0 = none)
-   * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
-   * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
-   * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
-   * @param {Number} [options.rotation=1] - default rotational speed for every particle
-   * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
-   * @param {Number} [options.alphaVariance=1] - variance in alpha change rate
-   * @param {Number} [options.minAlpha=0] - minumum alpha value of every particle
-   * @param {Number} [options.maxAlpha=1] - maximum alpha value of every particle
-   * @param {Number} [options.minSize=1] - minimum size of every particle
-   * @param {Number} [options.maxSize=10] - maximum size of every particle
-   * @param {String} [options.shape=circle] - shape of particles (one of; circle, square, triangle, line, image)
-   * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
-   * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
-   * @param {Number} [options.glow=0] - the glow effect size of each particle
-   * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
-   * @param {String} [options.imageUrl=] - if style is "image", define an image url (can be data-uri, must be square (1:1 ratio))
-   * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
-   * @param {Number} [width] - the width of the canvas element
-   * @param {Number} [height] - the height of the canvas element
-   * @returns - reference to a new Sparticles instance
-   */
-
-  var Sparticles = function Sparticles() {
-    var node = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.body;
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    var width = arguments.length > 2 ? arguments[2] : undefined;
-    var height = arguments.length > 3 ? arguments[3] : undefined;
-    var defaults = {
-      alphaSpeed: 10,
-      alphaVariance: 1,
-      color: "white",
-      composition: "source-over",
-      count: 50,
-      direction: 180,
-      float: 1,
-      glow: 0,
-      imageUrl: "",
-      maxAlpha: 1,
-      maxSize: 10,
-      minAlpha: 0,
-      minSize: 1,
-      parallax: 1,
-      rotation: 1,
-      shape: "circle",
-      speed: 10,
-      style: "fill",
-      twinkle: false,
-      xVariance: 2,
-      yVariance: 2
-    };
-    this.el = node;
-    this.width = width || this.el.clientWidth;
-    this.height = height || this.el.clientHeight;
-    this.settings = _objectSpread2({}, defaults, {}, options);
-    this.init();
-    return this;
-  };
-
-  Sparticles.prototype.init = function () {
-    var _this = this;
-    this.sparticles = [];
-    this.setupColors();
-    this.setupShapes();
-    this.setupCanvas();
-    this.setupSparticleColors(function () {
-      _this.createSparticles();
-
-      _this.start();
-    });
-  };
-  /**
-   * start/resume the sparticles animation
-   */
-
-
-  Sparticles.prototype.start = function () {
-    var me = this;
-
-    if (!this.loop) {
-      this.loop = new AnimationFrame(function (t) {
-        me.render(t);
-      });
-    }
-
-    this.loop.start();
-  };
-  /**
-   * stop/pause the sparticles animation
-   */
-
-
-  Sparticles.prototype.stop = function () {
-    this.loop.stop();
-  };
-
-  Sparticles.prototype.destroy = function () {
-    this.stop();
-    this.sparticles = null;
-    this.canvasses = null;
-    this.start = null;
-    this.stop = null;
-    this.init = null;
-    this.settings = null;
-    this.el.removeChild(this.canvas);
-  };
-  /**
-   * convert the input color to an array if it isn't already
-   * @returns {Array} - array of colors for use in rendering
-   */
-
-
-  Sparticles.prototype.setupColors = function () {
-    if (!Array.isArray(this.settings.color)) {
-      if (this.settings.color === "rainbow") {
-        var colors = 50;
-        this.settings.color = [];
-
-        for (var i = 0; i < colors; i++) {
-          this.settings.color[i] = randomHsl();
-        }
-      } else {
-        this.settings.color = [this.settings.color];
-      }
-    }
-
-    return this.settings.color;
-  };
-  /**
-   * convert the input shape to an array if it isn't already
-   * @returns {Array} - array of shapes for use in rendering
-   */
-
-
-  Sparticles.prototype.setupShapes = function () {
-    if (!Array.isArray(this.settings.shape)) {
-      if (this.settings.shape === "random") {
-        shapes = ["square", "circle", "triangle", "line"];
-      } else {
-        this.settings.shape = [this.settings.shape];
-      }
-    }
-
-    return this.settings.shape;
-  };
-  /**
-   * set up the canvas and bind to a property for
-   * access later on, append it to the DOM
-   * @returns {HTMLCanvasElement} - the canvas element which was appended to DOM
-   */
-
-
-  Sparticles.prototype.setupCanvas = function () {
-    this.canvas = document.createElement("canvas");
-    this.ctx = this.canvas.getContext("2d");
-    this.ctx.globalCompositeOperation = this.settings.composition;
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
-    this.el.appendChild(this.canvas);
-    return this.canvas;
-  };
-  /**
-   * attempt to laod the image given in options and after loading
-   * set up a new canvas for each color overlaid on the the image
-   * @param {Function} [callback] - function to execute after image loads
-   */
-
-
-  Sparticles.prototype.setupSparticleColors = function (callback) {
-    var _this2 = this;
-
-    var isImage = this.settings.shape[0] === "image" && this.settings.imageUrl;
-
-    var createOffscreenCanvases = function createOffscreenCanvases() {
-      _this2.settings.color.forEach(function (color) {
-        _this2.setupOffscreenCanvas(color);
-      });
-
-      if (callback) callback();
-    };
-
-    if (isImage) {
-      this.image = new Image();
-
-      this.image.onload = function () {
-        createOffscreenCanvases();
-      };
-
-      this.image.onerror = function () {
-        console.error("failed to load source image");
-      };
-
-      this.image.src = this.settings.imageUrl;
-    } else {
-      createOffscreenCanvases();
-    }
-  };
-  /**
-   * set up a new canvas element for the given color parameter,
-   * this creates a new property in the `this.canvasses` object under
-   * the given color which holds an offscreen canvas for rendering each particle.
-   * @param {String} color - the color value which we create a offscreen canvas for
-   * @returns {HTMLCanvasElement} - the created offscreen canvas
-   */
-
-
-  Sparticles.prototype.setupOffscreenCanvas = function () {
-    var _this3 = this;
-
-    var color = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "white";
-    this.canvasses = this.canvasses || {};
-    this.canvasses[color] = this.canvasses[color] || {};
-    this.settings.shape.forEach(function (shape) {
-      _this3.canvasses[color][shape] = document.createElement("canvas");
-
-      var ctx = _this3.canvasses[color][shape].getContext("2d");
-
-      switch (shape) {
-        case "image":
-          if (_this3.settings.imageUrl) {
-            _this3.setupImageCanvas(ctx, color, shape);
-          } else {
-            console.warn("No imageUrl value supplied, cannot render images");
-
-            _this3.setupCircleCanvas(ctx, color, shape);
-          }
-
-          break;
-
-        case "square":
-          _this3.setupSquareCanvas(ctx, color, shape);
-
-          break;
-
-        case "line":
-          _this3.setupLineCanvas(ctx, color, shape);
-
-          break;
-
-        case "triangle":
-          _this3.setupTriangleCanvas(ctx, color, shape);
-
-          break;
-
-        case "circle":
-        default:
-          _this3.setupCircleCanvas(ctx, color, shape);
-
-          break;
-      }
-    });
-    return this.canvasses[color];
-  };
-
-  Sparticles.prototype.getGlowSize = function (size) {
-    return this.settings.glow;
-  };
-
-  Sparticles.prototype.getLineSize = function (size) {
-    return clamp(size / 20, 1, 5);
-  };
-
-  Sparticles.prototype.renderStyle = function (ctx, color, lineSize) {
-    if (this.settings.style === "fill") {
-      ctx.fillStyle = color;
-    } else {
-      ctx.lineWidth = lineSize;
-      ctx.strokeStyle = color;
-    }
-  };
-
-  Sparticles.prototype.renderGlow = function (ctx, color, size) {
-    var glowSize = this.getGlowSize(size) / 2;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = glowSize;
-  };
-
-  Sparticles.prototype.renderColor = function (ctx) {
-    if (this.settings.style === "fill") {
-      ctx.fill();
-    } else {
-      ctx.stroke();
-    }
-  };
-
-  Sparticles.prototype.setupImageCanvas = function (ctx, color, shape) {
-    var size = this.image.width;
-    this.canvasses[color][shape].width = size;
-    this.canvasses[color][shape].height = size;
-    ctx.drawImage(this.image, 0, 0, size, size, 0, 0, size, size);
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, size, size);
-  };
-
-  Sparticles.prototype.setupCircleCanvas = function (ctx, color, shape) {
-    var size = this.settings.maxSize;
-    var lineSize = this.getLineSize(size);
-    var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize;
-    this.canvasses[color][shape].width = canvasSize;
-    this.canvasses[color][shape].height = canvasSize;
-    this.renderGlow(ctx, color, size);
-    this.renderStyle(ctx, color, lineSize);
-    ctx.beginPath();
-    ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
-    this.renderColor(ctx, color);
-  };
-
-  Sparticles.prototype.setupSquareCanvas = function (ctx, color, shape) {
-    var size = this.settings.maxSize;
-    var lineSize = this.getLineSize(size);
-    var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize + 5;
-    this.canvasses[color][shape].width = canvasSize;
-    this.canvasses[color][shape].height = canvasSize;
-    this.renderGlow(ctx, color, size);
-    this.renderStyle(ctx, color, lineSize);
-    ctx.beginPath();
-    ctx.rect(canvasSize / 2 - size / 2, canvasSize / 2 - size / 2, size, size);
-    this.renderColor(ctx, color);
-  };
-
-  Sparticles.prototype.setupTriangleCanvas = function (ctx, color, shape) {
-    var size = this.settings.maxSize;
-    var lineSize = this.getLineSize(size);
-    var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize + 5;
-    var height = size * (Math.sqrt(3) / 2);
-    var startx = canvasSize / 2;
-    var starty = canvasSize / 2 - size / 2;
-    this.canvasses[color][shape].width = canvasSize;
-    this.canvasses[color][shape].height = canvasSize;
-    this.renderGlow(ctx, color, size);
-    this.renderStyle(ctx, color, lineSize);
-    ctx.beginPath();
-    ctx.moveTo(startx, starty);
-    ctx.lineTo(startx - size / 2, starty + height);
-    ctx.lineTo(startx + size / 2, starty + height);
-    ctx.closePath();
-    this.renderColor(ctx, color);
-  };
-
-  Sparticles.prototype.setupLineCanvas = function (ctx, color, shape) {
-    var size = this.settings.maxSize * 2;
-    var lineSize = this.getLineSize(size);
-    var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize + 5;
-    var startx = canvasSize / 2 - size / 2;
-    var starty = canvasSize / 2 - size / 2;
-    this.canvasses[color][shape].width = canvasSize;
-    this.canvasses[color][shape].height = canvasSize;
-    this.renderGlow(ctx, color, size);
-    ctx.lineWidth = lineSize;
-    ctx.strokeStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(startx, starty);
-    ctx.lineTo(startx + size, starty + size);
-    ctx.stroke();
-    ctx.closePath();
-  };
-  /**
-   * create an array, and then loop through to the count
-   * value and populate the array with new Sparticle instances.
-   * @returns {Array} the array of Sparticle instances
-   */
-
-
-  Sparticles.prototype.createSparticles = function () {
-    this.sparticles = [];
-
-    for (var i = 0; i < this.settings.count; i++) {
-      this.sparticles.push(new Sparticle(this));
-    }
-
-    this.sparticles.sort(function (a, b) {
-      return a.size > b.size;
-    });
-    return this.sparticles;
-  };
-  /**
-   * wipe the canvas, update each particle, and then render
-   * each particle to the canvas
-   * @returns {Array} the array of Sparticle instances
-   */
-
-
-  Sparticles.prototype.render = function () {
-    this.ctx.clearRect(0, 0, this.width, this.height);
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = this.sparticles[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var sparticle = _step.value;
-        sparticle.update().render(this.canvasses);
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator.return != null) {
-          _iterator.return();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-
-    return this.sparticles;
-  };
-  /**
-   * ============================================================================
-   */
-
-  /**
    * Sparticle Constructor;
    * creates an individual particle for use in the Sparticles() class
    * @param {Object} parent - the parent Sparticles() instance this belongs to
    * @returns {Object} - reference to a new Sparticles instance
    */
-
 
   var Sparticle = function Sparticle(parent) {
     if (parent) {
@@ -650,7 +222,6 @@ var sparticles = (function (exports) {
    * the Sparticles instance settings.
    * these values do not change when the particle goes offscreen
    */
-
 
   Sparticle.prototype.init = function () {
     this.setup();
@@ -722,10 +293,14 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.getAlphaDelta = function () {
-    var max = this.settings.twinkle ? 0 : this.settings.alphaVariance;
-    var min = -this.settings.alphaVariance;
-    return random(min, max) / 10;
+  Sparticle.prototype.getDelta = function () {
+    var baseDelta = this.settings.speed * 0.1;
+
+    if (this.settings.speed && this.settings.parallax) {
+      return baseDelta + this.size * this.settings.parallax / 50;
+    } else {
+      return baseDelta;
+    }
   };
 
   Sparticle.prototype.getDeltaX = function () {
@@ -751,14 +326,10 @@ var sparticles = (function (exports) {
     }
   };
 
-  Sparticle.prototype.getDelta = function () {
-    var baseDelta = this.settings.speed * 0.1;
-
-    if (this.settings.speed && this.settings.parallax) {
-      return baseDelta + this.size * this.settings.parallax / 50;
-    } else {
-      return baseDelta;
-    }
+  Sparticle.prototype.getAlphaDelta = function () {
+    var max = this.settings.twinkle ? 0 : this.settings.alphaVariance;
+    var min = -this.settings.alphaVariance;
+    return random(min, max) / 10;
   };
 
   Sparticle.prototype.getFloatDelta = function () {
@@ -887,6 +458,500 @@ var sparticles = (function (exports) {
       this.ctx.rotate(this.rotation);
       this.ctx.translate(-centerX, -centerY);
     }
+  };
+
+  /**
+   * Sparticles Constructor;
+   * Create a <canvas>, append to the given node, and start the particle effect
+   * @param {HTMLElement} [node] - element to which canvas is appended to
+   * @param {Object} [options] - settings to use for the particle effect
+   * @param {String} [options.composition=source-over] - canvas globalCompositeOperation value for particles
+   * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
+   * @param {Number} [options.speed=10] - default velocity of every particle
+   * @param {Number} [options.parallax=1] - speed multiplier effect for larger particles (0 = none)
+   * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
+   * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
+   * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
+   * @param {Number} [options.rotation=1] - default rotational speed for every particle
+   * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
+   * @param {Number} [options.alphaVariance=1] - variance in alpha change rate
+   * @param {Number} [options.minAlpha=0] - minumum alpha value of every particle
+   * @param {Number} [options.maxAlpha=1] - maximum alpha value of every particle
+   * @param {Number} [options.minSize=1] - minimum size of every particle
+   * @param {Number} [options.maxSize=10] - maximum size of every particle
+   * @param {String} [options.shape=circle] - shape of particles (one of; circle, square, triangle, line, image)
+   * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
+   * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
+   * @param {Number} [options.glow=0] - the glow effect size of each particle
+   * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
+   * @param {String} [options.imageUrl=] - if style is "image", define an image url (can be data-uri, must be square (1:1 ratio))
+   * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
+   * @param {Number} [width] - the width of the canvas element
+   * @param {Number} [height] - the height of the canvas element
+   * @returns - reference to a new Sparticles instance
+   */
+
+  var Sparticles = function Sparticles() {
+    var node = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.body;
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var width = arguments.length > 2 ? arguments[2] : undefined;
+    var height = arguments.length > 3 ? arguments[3] : undefined;
+    var defaults = {
+      alphaSpeed: 10,
+      alphaVariance: 1,
+      color: "white",
+      composition: "source-over",
+      count: 50,
+      direction: 180,
+      float: 1,
+      glow: 0,
+      imageUrl: "",
+      maxAlpha: 1,
+      maxSize: 10,
+      minAlpha: 0,
+      minSize: 1,
+      parallax: 1,
+      rotation: 1,
+      shape: "circle",
+      speed: 10,
+      style: "fill",
+      twinkle: false,
+      xVariance: 2,
+      yVariance: 2
+    };
+    this.el = node;
+    this.width = width || this.el.clientWidth;
+    this.height = height || this.el.clientHeight;
+    this.settings = _objectSpread2({}, defaults, {}, options);
+    this.init();
+    return this;
+  };
+
+  Sparticles.prototype.init = function () {
+    var _this = this;
+
+    this.sparticles = [];
+    this.createColorArray();
+    this.createShapeArray();
+    this.setupMainCanvas();
+    this.loadImages(function () {
+      _this.createSparticles();
+
+      _this.start();
+    });
+  };
+  /**
+   * start/resume the sparticles animation
+   */
+
+
+  Sparticles.prototype.start = function () {
+    var me = this;
+
+    if (!this.loop) {
+      this.loop = new AnimationFrame(function (t) {
+        me.render(t);
+      });
+    }
+
+    this.loop.start();
+  };
+  /**
+   * stop/pause the sparticles animation
+   */
+
+
+  Sparticles.prototype.stop = function () {
+    this.loop.stop();
+  };
+  /**
+   * destroy the current instance and free up some memory
+   */
+
+
+  Sparticles.prototype.destroy = function () {
+    this.stop();
+    this.sparticles = null;
+    this.canvasses = null;
+    this.start = null;
+    this.stop = null;
+    this.init = null;
+    this.settings = null;
+    this.el.removeChild(this.canvas);
+  };
+  /**
+   * convert the input color to an array if it isn't already
+   * @returns {Array} - array of colors for use in rendering
+   */
+
+
+  Sparticles.prototype.createColorArray = function () {
+    if (!Array.isArray(this.settings.color)) {
+      if (this.settings.color === "rainbow") {
+        var colors = 50;
+        this.settings.color = [];
+
+        for (var i = 0; i < colors; i++) {
+          this.settings.color[i] = randomHsl();
+        }
+      } else {
+        this.settings.color = [this.settings.color];
+      }
+    }
+
+    return this.settings.color;
+  };
+  /**
+   * convert the input shape to an array if it isn't already
+   * @returns {Array} - array of shapes for use in rendering
+   */
+
+
+  Sparticles.prototype.createShapeArray = function () {
+    if (!Array.isArray(this.settings.shape)) {
+      if (this.settings.shape === "random") {
+        shapes = ["square", "circle", "triangle", "line"];
+      } else {
+        this.settings.shape = [this.settings.shape];
+      }
+    }
+
+    return this.settings.shape;
+  };
+  /**
+   * set up the canvas and bind to a property for
+   * access later on, append it to the DOM
+   * @returns {HTMLCanvasElement} - the canvas element which was appended to DOM
+   */
+
+
+  Sparticles.prototype.setupMainCanvas = function () {
+    this.canvas = document.createElement("canvas");
+    this.ctx = this.canvas.getContext("2d");
+    this.ctx.globalCompositeOperation = this.settings.composition;
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+    this.el.appendChild(this.canvas);
+    return this.canvas;
+  };
+  /**
+   * attempt to laod the image given in options and after loading
+   * set up a new canvas for each color overlaid on the the image
+   * @param {Function} [callback] - function to execute after image loads
+   */
+
+
+  Sparticles.prototype.loadImages = function (callback) {
+    var _this2 = this;
+
+    if (this.settings.shape[0] === "image" && this.settings.imageUrl) {
+      this.image = new Image();
+
+      this.image.onload = function () {
+        _this2.setupOffscreenCanvasses(callback);
+      };
+
+      this.image.onerror = function () {
+        console.error("failed to load source image");
+      };
+
+      this.image.src = this.settings.imageUrl;
+    } else {
+      this.setupOffscreenCanvasses(callback);
+    }
+  };
+  /**
+   * create a new offscreen canvas element for each color & shape
+   * combination, so that we can reference it later during render
+   * (huge performance gains here)
+   * @param {Function} [callback] - function to execute after image loads
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.setupOffscreenCanvasses = function (callback) {
+    var _this3 = this;
+
+    this.canvasses = this.canvasses || {};
+    this.settings.color.forEach(function (color) {
+      _this3.canvasses[color] = _this3.canvasses[color] || {};
+
+      _this3.settings.shape.forEach(function (shape) {
+        _this3.canvasses[color][shape] = document.createElement("canvas");
+        var canvas = _this3.canvasses[color][shape];
+        var ctx = canvas.getContext("2d");
+
+        switch (shape) {
+          case "square":
+            _this3.createSquareOffscreenCanvas(canvas, ctx, color);
+
+            break;
+
+          case "line":
+            _this3.createLineOffscreenCanvas(canvas, ctx, color);
+
+            break;
+
+          case "triangle":
+            _this3.createTriangleOffscreenCanvas(canvas, ctx, color);
+
+            break;
+
+          case "image":
+            if (_this3.settings.imageUrl) {
+              _this3.createImageOffscreenCanvas(canvas, ctx, color);
+
+              break;
+            }
+
+          case "circle":
+          default:
+            _this3.createCircleOffscreenCanvas(canvas, ctx, color);
+
+            break;
+        }
+      });
+    });
+    if (callback) callback();
+  };
+  /**
+   * return the size of the glow effect (shadowBlur) for each particle
+   * @param {Number} size - the size of the particle
+   * @returns {Number} - the size of the glow/shadow
+   */
+
+
+  Sparticles.prototype.getGlowSize = function (size) {
+    return this.settings.glow;
+  };
+  /**
+   * return the outline or stroke size of each particle
+   * @param {Number} size - the size of the particle
+   * @returns {Number} - the size of the outline/stroke
+   */
+
+
+  Sparticles.prototype.getLineSize = function (size) {
+    return clamp(size / 20, 1, 5);
+  };
+  /**
+   * set the fill/stroke style (color & width) for each particle's offscreen canvas
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @param {Number} lineSize - size/thickness of the stroke
+   */
+
+
+  Sparticles.prototype.renderStyle = function (ctx, color, lineSize) {
+    if (this.settings.style === "fill") {
+      ctx.fillStyle = color;
+    } else {
+      ctx.lineWidth = lineSize;
+      ctx.strokeStyle = color;
+    }
+  };
+  /**
+   * set the shadowBlur (glow effect) for each particle's offscreen canvas
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @param {Number} size - size of the shadow/glow
+   */
+
+
+  Sparticles.prototype.renderGlow = function (ctx, color, size) {
+    var glowSize = this.getGlowSize(size) / 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = glowSize;
+  };
+  /**
+   * fill or stroke each particle's offscreen canvas depending on the given setting
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   */
+
+
+  Sparticles.prototype.renderColor = function (ctx) {
+    if (this.settings.style === "fill") {
+      ctx.fill();
+    } else {
+      ctx.stroke();
+    }
+  };
+  /**
+   * create, setup and render an offscreen canvas for a
+   * Square Particle of the given color
+   * @param {HTMLCanvasElement} canvas - the canvas element
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.createSquareOffscreenCanvas = function (canvas, ctx, color) {
+    var size = this.settings.maxSize;
+    var lineSize = this.getLineSize(size);
+    var glowSize = this.getGlowSize(size);
+    var canvasSize = size + lineSize + glowSize;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    this.renderGlow(ctx, color, size);
+    this.renderStyle(ctx, color, lineSize);
+    ctx.beginPath();
+    ctx.rect(canvasSize / 2 - size / 2, canvasSize / 2 - size / 2, size, size);
+    this.renderColor(ctx, color);
+    return canvas;
+  };
+  /**
+   * create, setup and render an offscreen canvas for a
+   * Line/Curve Particle of the given color
+   * @param {HTMLCanvasElement} canvas - the canvas element
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.createLineOffscreenCanvas = function (canvas, ctx, color) {
+    var size = this.settings.maxSize * 2;
+    var lineSize = this.getLineSize(size);
+    var glowSize = this.getGlowSize(size);
+    var canvasSize = size + lineSize + glowSize;
+    var startx = canvasSize / 2 - size / 2;
+    var starty = canvasSize / 2 - size / 2;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    this.renderGlow(ctx, color, size);
+    ctx.lineWidth = lineSize;
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(startx, starty);
+    ctx.lineTo(startx + size, starty + size);
+    ctx.stroke();
+    ctx.closePath();
+  };
+  /**
+   * create, setup and render an offscreen canvas for a
+   * Triangle Particle of the given color
+   * @param {HTMLCanvasElement} canvas - the canvas element
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.createTriangleOffscreenCanvas = function (canvas, ctx, color) {
+    var size = this.settings.maxSize;
+    var lineSize = this.getLineSize(size);
+    var glowSize = this.getGlowSize(size);
+    var canvasSize = size + lineSize + glowSize;
+    var height = size * (Math.sqrt(3) / 2);
+    var startx = canvasSize / 2;
+    var starty = canvasSize / 2 - size / 2;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    this.renderGlow(ctx, color, size);
+    this.renderStyle(ctx, color, lineSize);
+    ctx.beginPath();
+    ctx.moveTo(startx, starty);
+    ctx.lineTo(startx - size / 2, starty + height);
+    ctx.lineTo(startx + size / 2, starty + height);
+    ctx.closePath();
+    this.renderColor(ctx, color);
+  };
+  /**
+   * create, setup and render an offscreen canvas for a
+   * Custom Image Particle of the given color
+   * @param {HTMLCanvasElement} canvas - the canvas element
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.createImageOffscreenCanvas = function (canvas, ctx, color) {
+    var size = this.image.width;
+    canvas.width = size;
+    canvas.height = size;
+    ctx.drawImage(this.image, 0, 0, size, size, 0, 0, size, size);
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, size, size);
+  };
+  /**
+   * create, setup and render an offscreen canvas for a
+   * Circle Particle of the given color
+   * @param {HTMLCanvasElement} canvas - the canvas element
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.createCircleOffscreenCanvas = function (canvas, ctx, color) {
+    var size = this.settings.maxSize;
+    var lineSize = this.getLineSize(size);
+    var glowSize = this.getGlowSize(size);
+    var canvasSize = size + lineSize + glowSize;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    this.renderGlow(ctx, color, size);
+    this.renderStyle(ctx, color, lineSize);
+    ctx.beginPath();
+    ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
+    this.renderColor(ctx, color);
+  };
+  /**
+   * create an array, and then loop through to the count
+   * value and populate the array with new Sparticle instances.
+   * @returns {Array} the array of Sparticle instances
+   */
+
+
+  Sparticles.prototype.createSparticles = function () {
+    this.sparticles = [];
+
+    for (var i = 0; i < this.settings.count; i++) {
+      this.sparticles.push(new Sparticle(this));
+    }
+
+    this.sparticles.sort(function (a, b) {
+      return a.size > b.size;
+    });
+    return this.sparticles;
+  };
+  /**
+   * wipe the canvas, update each particle, and then render
+   * each particle to the canvas
+   * @returns {Array} the array of Sparticle instances
+   */
+
+
+  Sparticles.prototype.render = function () {
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = this.sparticles[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var sparticle = _step.value;
+        sparticle.update().render(this.canvasses);
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return != null) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+
+    return this.sparticles;
   };
 
   exports.Sparticles = Sparticles;
