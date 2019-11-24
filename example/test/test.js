@@ -89,9 +89,9 @@ window.initGui = function() {
     "luminosity"
   ];
   const rerender = () => {
-    s.setupColors();
-    s.setupShapes();
-    s.setupSparticleColors(function() {
+    s.createColorArray();
+    s.createShapeArray();
+    s.loadImages(function() {
       s.createSparticles();
     });
   };
