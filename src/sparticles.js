@@ -69,7 +69,7 @@ Sparticles.prototype.init = function() {
   this.createColorArray();
   this.createShapeArray();
   this.setupMainCanvas();
-  this.loadImages(() => {
+  this.setupOffscreenCanvasses(() => {
     this.createSparticles();
     this.start();
   });
@@ -159,26 +159,6 @@ Sparticles.prototype.setupMainCanvas = function() {
 };
 
 /**
- * attempt to laod the image given in options and after loading
- * set up a new canvas for each color overlaid on the the image
- * @param {Function} [callback] - function to execute after image loads
- */
-Sparticles.prototype.loadImages = function(callback) {
-  if (this.settings.shape[0] === "image" && this.settings.imageUrl) {
-    this.image = new Image();
-    this.image.onload = () => {
-      this.setupOffscreenCanvasses(callback);
-    };
-    this.image.onerror = () => {
-      console.error("failed to load source image");
-    };
-    this.image.src = this.settings.imageUrl;
-  } else {
-    this.setupOffscreenCanvasses(callback);
-  }
-};
-
-/**
  * create a new offscreen canvas element for each color & shape
  * combination, so that we can reference it later during render
  * (huge performance gains here)
@@ -191,39 +171,39 @@ Sparticles.prototype.setupOffscreenCanvasses = function(callback) {
   this.settings.color.forEach(color => {
     this.canvasses[color] = this.canvasses[color] || {};
 
-    this.settings.shape.forEach(shape => {
-      this.canvasses[color][shape] = document.createElement("canvas");
-      const canvas = this.canvasses[color][shape];
-      const ctx = canvas.getContext("2d");
+    if (this.settings.shape[0] === "image") {
+      this.loadAndDrawImages(color, callback);
+    } else {
+      this.settings.shape.forEach(shape => {
+        this.canvasses[color][shape] = document.createElement("canvas");
+        const canvas = this.canvasses[color][shape];
+        const ctx = canvas.getContext("2d");
 
-      switch (shape) {
-        case "square":
-          this.createSquareOffscreenCanvas(canvas, ctx, color);
-          break;
-
-        case "line":
-          this.createLineOffscreenCanvas(canvas, ctx, color);
-          break;
-
-        case "triangle":
-          this.createTriangleOffscreenCanvas(canvas, ctx, color);
-          break;
-
-        case "image":
-          if (this.settings.imageUrl) {
-            this.createImageOffscreenCanvas(canvas, ctx, color);
+        switch (shape) {
+          case "square":
+            this.drawSquareOffscreenCanvas(canvas, ctx, color);
+            if (callback) callback();
             break;
-          }
 
-        case "circle":
-        default:
-          this.createCircleOffscreenCanvas(canvas, ctx, color);
-          break;
-      }
-    });
+          case "line":
+            this.drawLineOffscreenCanvas(canvas, ctx, color);
+            if (callback) callback();
+            break;
+
+          case "triangle":
+            this.drawTriangleOffscreenCanvas(canvas, ctx, color);
+            if (callback) callback();
+            break;
+
+          case "circle":
+          default:
+            this.drawCircleOffscreenCanvas(canvas, ctx, color);
+            if (callback) callback();
+            break;
+        }
+      });
+    }
   });
-
-  if (callback) callback();
 };
 
 /**
@@ -291,7 +271,7 @@ Sparticles.prototype.renderColor = function(ctx) {
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.createSquareOffscreenCanvas = function(canvas, ctx, color) {
+Sparticles.prototype.drawSquareOffscreenCanvas = function(canvas, ctx, color) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
@@ -314,7 +294,7 @@ Sparticles.prototype.createSquareOffscreenCanvas = function(canvas, ctx, color) 
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.createLineOffscreenCanvas = function(canvas, ctx, color) {
+Sparticles.prototype.drawLineOffscreenCanvas = function(canvas, ctx, color) {
   const size = this.settings.maxSize * 2;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
@@ -331,6 +311,7 @@ Sparticles.prototype.createLineOffscreenCanvas = function(canvas, ctx, color) {
   ctx.lineTo(startx + size, starty + size);
   ctx.stroke();
   ctx.closePath();
+  return canvas;
 };
 
 /**
@@ -341,7 +322,7 @@ Sparticles.prototype.createLineOffscreenCanvas = function(canvas, ctx, color) {
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.createTriangleOffscreenCanvas = function(canvas, ctx, color) {
+Sparticles.prototype.drawTriangleOffscreenCanvas = function(canvas, ctx, color) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
@@ -359,24 +340,64 @@ Sparticles.prototype.createTriangleOffscreenCanvas = function(canvas, ctx, color
   ctx.lineTo(startx + size / 2, starty + height);
   ctx.closePath();
   this.renderColor(ctx, color);
+  return canvas;
+};
+
+/**
+ * set up the needed array for referencing the images in the Sparticle()
+ * instance, then loop through each image and load it before running the callback
+ * @param {String} color - the color of the image that we're loading
+ * @param {Function} callback - callback function to run after images load
+ */
+Sparticles.prototype.loadAndDrawImages = function(color, callback) {
+  const imgUrls = this.settings.imageUrl;
+  const imageUrls = Array.isArray(imgUrls) ? imgUrls : [imgUrls];
+  const imageCount = imageUrls.length;
+  let imagesLoaded = 0;
+  this.images = [];
+
+  imageUrls.forEach((imageUrl, i) => {
+    const imgName = "image" + i;
+    this.images.push(imgName);
+    this.canvasses[color][imgName] = document.createElement("canvas");
+    const canvas = this.canvasses[color][imgName];
+    const ctx = canvas.getContext("2d");
+    const image = new Image();
+
+    image.onload = () => {
+      imagesLoaded++;
+      this.drawImageOffscreenCanvas(image, canvas, ctx, color);
+      if (callback && imagesLoaded === imageCount) {
+        callback();
+      }
+    };
+
+    image.onerror = () => {
+      console.error("failed to load source image: ", imageUrl);
+    };
+
+    image.src = imageUrl;
+  });
 };
 
 /**
  * create, setup and render an offscreen canvas for a
  * Custom Image Particle of the given color
+ * @param {HTMLImageElement} image - the image element that has loaded
  * @param {HTMLCanvasElement} canvas - the canvas element
  * @param {CanvasRenderingContext2D} ctx - the canvas context
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.createImageOffscreenCanvas = function(canvas, ctx, color) {
-  const size = this.image.width;
+Sparticles.prototype.drawImageOffscreenCanvas = function(image, canvas, ctx, color) {
+  const size = image.width;
   canvas.width = size;
   canvas.height = size;
-  ctx.drawImage(this.image, 0, 0, size, size, 0, 0, size, size);
+  ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
   ctx.globalCompositeOperation = "source-atop";
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, size, size);
+  return canvas;
 };
 
 /**
@@ -387,7 +408,7 @@ Sparticles.prototype.createImageOffscreenCanvas = function(canvas, ctx, color) {
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.createCircleOffscreenCanvas = function(canvas, ctx, color) {
+Sparticles.prototype.drawCircleOffscreenCanvas = function(canvas, ctx, color) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
@@ -399,6 +420,7 @@ Sparticles.prototype.createCircleOffscreenCanvas = function(canvas, ctx, color) 
   ctx.beginPath();
   ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
   this.renderColor(ctx, color);
+  return canvas;
 };
 
 /**

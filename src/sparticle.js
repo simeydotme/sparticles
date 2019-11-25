@@ -9,6 +9,7 @@ import { cartesian, clamp, radian, random, randomArray, roll, round } from "./he
 export const Sparticle = function(parent) {
   if (parent) {
     this.canvas = parent.canvas;
+    this.images = parent.images;
     this.settings = parent.settings;
     this.ctx = this.canvas.getContext("2d");
     this.init();
@@ -84,8 +85,13 @@ Sparticle.prototype.getColor = function() {
 };
 
 Sparticle.prototype.getShape = function() {
-  if (Array.isArray(this.settings.shape)) {
-    return randomArray(this.settings.shape);
+  const shape = this.settings.shape;
+  if (Array.isArray(shape)) {
+    if (shape[0] === "image" && this.images) {
+      return randomArray(this.images);
+    } else {
+      return randomArray(shape);
+    }
   }
 };
 

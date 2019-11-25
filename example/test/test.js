@@ -19,14 +19,15 @@ let options = {
   direction: 180,
   float: 1,
   glow: 20,
-  imageUrl: "",
+  imageUrl: ["./sparkle.png","./star.png","./snowflake.png"],
   maxAlpha: 1,
   maxSize: 40,
   minAlpha: 0,
   minSize: 10,
   parallax: 1,
   rotation: 1,
-  shape: ["triangle","square","circle"],
+  // shape: ["triangle","square","circle"],
+  shape: "image",
   speed: 0,
   style: "fill",
   twinkle: false,
@@ -91,7 +92,7 @@ window.initGui = function() {
   const rerender = () => {
     s.createColorArray();
     s.createShapeArray();
-    s.loadImages(function() {
+    s.setupOffscreenCanvasses(function() {
       s.createSparticles();
     });
   };
@@ -115,7 +116,7 @@ window.initGui = function() {
   part.add(s.settings, "shape", shapes).onFinishChange(rerender);
   part.add(s.settings, "style", styles).onFinishChange(rerender);
   const image = part.addFolder("Image");
-  image.add(s.settings, "imageUrl").onFinishChange(rerender);
+  // image.add(s.settings, "imageUrl").onFinishChange(rerender);
   part.add(s.settings, "minSize", 1, 50, 1).onFinishChange(rerender);
   part.add(s.settings, "maxSize", 1, 50, 1).onFinishChange(rerender);
   const anim = gui.addFolder("Animation");
