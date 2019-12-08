@@ -4,10 +4,10 @@ let colorType = {
 };
 
 let colors = {
-  color1: "rgba(0,255,173,1)",
-  color2: "rgba(210,88,109,1)",
-  color3: "rgba(210,88,109,1)",
-  color4: "rgba(210,88,109,1)"
+  color1: "rgba(255,255,255,1)",
+  color2: "rgba(252,248,230,1)",
+  color3: "rgba(255,227,241,1)",
+  color4: "rgba(230,248,255,1)"
 };
 
 let options = {
@@ -15,23 +15,30 @@ let options = {
   alphaVariance: 1,
   color: [colors.color1, colors.color2, colors.color3, colors.color4],
   composition: "source-over",
-  count: 100,
+  count: 200,
   direction: 180,
-  float: 1,
-  glow: 20,
-  imageUrl: ["./sparkle.png","./star.png","./snowflake.png"],
-  maxAlpha: 1,
-  maxSize: 40,
-  minAlpha: 0,
-  minSize: 10,
-  parallax: 1,
-  rotation: 1,
-  // shape: ["triangle","square","circle"],
+  float: 2,
+  glow: 0,
+  imageUrl: [
+    "./snowflake.png",
+    "https://image.flaticon.com/icons/svg/23/23858.svg",
+    "https://image.flaticon.com/icons/svg/23/23883.svg",
+    "https://image.flaticon.com/icons/svg/23/23889.svg",
+    "https://image.flaticon.com/icons/svg/24/24296.svg",
+    "https://image.flaticon.com/icons/svg/23/23901.svg",
+    "https://image.flaticon.com/icons/svg/24/24286.svg"
+  ],
+  maxAlpha: 2,
+  maxSize: 16,
+  minAlpha: -0.2,
+  minSize: 4,
+  parallax: 4,
+  rotation: 0.5,
   shape: "image",
-  speed: 0,
+  speed: 3.4,
   style: "fill",
   twinkle: false,
-  xVariance: 2,
+  xVariance: 10,
   yVariance: 2,
 };
 

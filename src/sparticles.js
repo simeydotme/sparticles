@@ -21,12 +21,12 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {Number} [options.maxAlpha=1] - maximum alpha value of every particle
  * @param {Number} [options.minSize=1] - minimum size of every particle
  * @param {Number} [options.maxSize=10] - maximum size of every particle
- * @param {String} [options.shape=circle] - shape of particles (one of; circle, square, triangle, line, image)
  * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
  * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
  * @param {Number} [options.glow=0] - the glow effect size of each particle
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
  * @param {String} [options.imageUrl=] - if style is "image", define an image url (can be data-uri, must be square (1:1 ratio))
+ * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
  * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
  * @param {Number} [width] - the width of the canvas element
  * @param {Number} [height] - the height of the canvas element
@@ -135,7 +135,7 @@ Sparticles.prototype.createColorArray = function() {
 Sparticles.prototype.createShapeArray = function() {
   if (!Array.isArray(this.settings.shape)) {
     if (this.settings.shape === "random") {
-      shapes = ["square", "circle", "triangle", "line"];
+      this.settings.shape = ["square", "circle", "triangle", "diamond"];
     } else {
       this.settings.shape = [this.settings.shape];
     }
@@ -181,23 +181,28 @@ Sparticles.prototype.setupOffscreenCanvasses = function(callback) {
 
         switch (shape) {
           case "square":
-            this.drawSquareOffscreenCanvas(canvas, ctx, color);
+            this.drawOffscreenCanvasForSquare(canvas, ctx, color);
             if (callback) callback();
             break;
 
           case "line":
-            this.drawLineOffscreenCanvas(canvas, ctx, color);
+            this.drawOffscreenCanvasForLine(canvas, ctx, color);
             if (callback) callback();
             break;
 
           case "triangle":
-            this.drawTriangleOffscreenCanvas(canvas, ctx, color);
+            this.drawOffscreenCanvasForTriangle(canvas, ctx, color);
+            if (callback) callback();
+            break;
+
+          case "diamond":
+            this.drawOffscreenCanvasForDiamond(canvas, ctx, color);
             if (callback) callback();
             break;
 
           case "circle":
           default:
-            this.drawCircleOffscreenCanvas(canvas, ctx, color);
+            this.drawOffscreenCanvasForCircle(canvas, ctx, color);
             if (callback) callback();
             break;
         }
@@ -271,7 +276,7 @@ Sparticles.prototype.renderColor = function(ctx) {
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.drawSquareOffscreenCanvas = function(canvas, ctx, color) {
+Sparticles.prototype.drawOffscreenCanvasForSquare = function(canvas, ctx, color) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
@@ -294,7 +299,7 @@ Sparticles.prototype.drawSquareOffscreenCanvas = function(canvas, ctx, color) {
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.drawLineOffscreenCanvas = function(canvas, ctx, color) {
+Sparticles.prototype.drawOffscreenCanvasForLine = function(canvas, ctx, color) {
   const size = this.settings.maxSize * 2;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
@@ -322,7 +327,7 @@ Sparticles.prototype.drawLineOffscreenCanvas = function(canvas, ctx, color) {
  * @param {String} color - the color to fill/stroke with
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
-Sparticles.prototype.drawTriangleOffscreenCanvas = function(canvas, ctx, color) {
+Sparticles.prototype.drawOffscreenCanvasForTriangle = function(canvas, ctx, color) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
@@ -339,6 +344,91 @@ Sparticles.prototype.drawTriangleOffscreenCanvas = function(canvas, ctx, color) 
   ctx.lineTo(startx - size / 2, starty + height);
   ctx.lineTo(startx + size / 2, starty + height);
   ctx.closePath();
+  this.renderColor(ctx, color);
+  return canvas;
+};
+
+/**
+ * create, setup and render an offscreen canvas for a
+ * Diamond Sparkle Particle of the given color
+ * @param {HTMLCanvasElement} canvas - the canvas element
+ * @param {CanvasRenderingContext2D} ctx - the canvas context
+ * @param {String} color - the color to fill/stroke with
+ * @returns {HTMLCanvasElement} - the created offscreen canvas
+ */
+Sparticles.prototype.drawOffscreenCanvasForDiamond = function(canvas, ctx, color) {
+  const size = this.settings.maxSize;
+  const half = size / 2;
+  const lineSize = this.getLineSize(size);
+  const glowSize = this.getGlowSize(size);
+  const canvasSize = size + lineSize + glowSize;
+  const mid = canvasSize / 2;
+  const anchor = size * 0.08;
+  const pointx = size * 0.02;
+  const startx = mid - half;
+  const starty = mid;
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  this.renderGlow(ctx, color, size);
+  this.renderStyle(ctx, color, lineSize);
+  ctx.beginPath();
+  ctx.moveTo(startx + pointx, starty);
+  ctx.bezierCurveTo(
+    mid - anchor / 2,
+    mid - anchor * 2,
+    mid - anchor * 2,
+    mid - anchor / 2,
+    mid,
+    mid - half
+  );
+  ctx.bezierCurveTo(
+    mid + anchor * 2,
+    mid - anchor / 2,
+    mid + anchor / 2,
+    mid - anchor * 2,
+    mid + half - pointx,
+    mid
+  );
+  ctx.bezierCurveTo(
+    mid + anchor / 2,
+    mid + anchor * 2,
+    mid + anchor * 2,
+    mid + anchor / 2,
+    mid,
+    mid + half
+  );
+  ctx.bezierCurveTo(
+    mid - anchor * 2,
+    mid + anchor / 2,
+    mid - anchor / 2,
+    mid + anchor * 2,
+    startx + pointx,
+    starty
+  );
+  ctx.closePath();
+  this.renderColor(ctx, color);
+  return canvas;
+};
+
+/**
+ * create, setup and render an offscreen canvas for a
+ * Circle Particle of the given color
+ * @param {HTMLCanvasElement} canvas - the canvas element
+ * @param {CanvasRenderingContext2D} ctx - the canvas context
+ * @param {String} color - the color to fill/stroke with
+ * @returns {HTMLCanvasElement} - the created offscreen canvas
+ */
+Sparticles.prototype.drawOffscreenCanvasForCircle = function(canvas, ctx, color) {
+  const size = this.settings.maxSize;
+  const lineSize = this.getLineSize(size);
+  const glowSize = this.getGlowSize(size);
+  const canvasSize = size + lineSize + glowSize;
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  this.renderGlow(ctx, color, size);
+  this.renderStyle(ctx, color, lineSize);
+  ctx.beginPath();
+  ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
   this.renderColor(ctx, color);
   return canvas;
 };
@@ -397,29 +487,6 @@ Sparticles.prototype.drawImageOffscreenCanvas = function(image, canvas, ctx, col
   ctx.globalCompositeOperation = "source-atop";
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, size, size);
-  return canvas;
-};
-
-/**
- * create, setup and render an offscreen canvas for a
- * Circle Particle of the given color
- * @param {HTMLCanvasElement} canvas - the canvas element
- * @param {CanvasRenderingContext2D} ctx - the canvas context
- * @param {String} color - the color to fill/stroke with
- * @returns {HTMLCanvasElement} - the created offscreen canvas
- */
-Sparticles.prototype.drawCircleOffscreenCanvas = function(canvas, ctx, color) {
-  const size = this.settings.maxSize;
-  const lineSize = this.getLineSize(size);
-  const glowSize = this.getGlowSize(size);
-  const canvasSize = size + lineSize + glowSize;
-  canvas.width = canvasSize;
-  canvas.height = canvasSize;
-  this.renderGlow(ctx, color, size);
-  this.renderStyle(ctx, color, lineSize);
-  ctx.beginPath();
-  ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
-  this.renderColor(ctx, color);
   return canvas;
 };
 
