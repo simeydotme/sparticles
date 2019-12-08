@@ -1,12 +1,26 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.8.2
+ * @version 0.8.3
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  */
 
 var sparticles = (function (exports) {
   'use strict';
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function (obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
 
   function _defineProperty(obj, key, value) {
     if (key in obj) {
@@ -498,13 +512,18 @@ var sparticles = (function (exports) {
    * @returns - reference to a new Sparticles instance
    */
 
-  var Sparticles = function Sparticles() {
+  var Sparticles = function Sparticles(node) {
     var _this = this;
 
-    var node = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.body;
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var width = arguments.length > 2 ? arguments[2] : undefined;
     var height = arguments.length > 3 ? arguments[3] : undefined;
+
+    if (arguments.length === 1 && _typeof(arguments[0]) === "object") {
+      options = node;
+      node = undefined;
+    }
+
     var defaults = {
       alphaSpeed: 10,
       alphaVariance: 1,
@@ -528,7 +547,7 @@ var sparticles = (function (exports) {
       xVariance: 2,
       yVariance: 2
     };
-    this.el = node;
+    this.el = node || document.body;
     this.settings = _objectSpread2({}, defaults, {}, options);
     this.init(width, height);
     window.addEventListener("resize", function () {
