@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.8.0
+ * @version 0.8.2
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  */
@@ -499,6 +499,8 @@ var sparticles = (function (exports) {
    */
 
   var Sparticles = function Sparticles() {
+    var _this = this;
+
     var node = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.body;
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var width = arguments.length > 2 ? arguments[2] : undefined;
@@ -527,24 +529,35 @@ var sparticles = (function (exports) {
       yVariance: 2
     };
     this.el = node;
-    this.width = width || this.el.clientWidth;
-    this.height = height || this.el.clientHeight;
     this.settings = _objectSpread2({}, defaults, {}, options);
-    this.init();
+    this.init(width, height);
+    window.addEventListener("resize", function () {
+      clearTimeout(_this.resizeTimer);
+      _this.resizeTimer = setTimeout(function () {
+        _this.setCanvasSize();
+
+        _this.createSparticles();
+      }, 200);
+    });
     return this;
   };
+  /**
+   * initialise the sparticles instance
+   * @param {Number} width - the width of the canvas if not fluid
+   * @param {Number} height - the height of the canvas if not fluid
+   */
 
-  Sparticles.prototype.init = function () {
-    var _this = this;
+  Sparticles.prototype.init = function (width, height) {
+    var _this2 = this;
 
     this.sparticles = [];
     this.createColorArray();
     this.createShapeArray();
-    this.setupMainCanvas();
+    this.setupMainCanvas(width, height);
     this.setupOffscreenCanvasses(function () {
-      _this.createSparticles();
+      _this2.createSparticles();
 
-      _this.start();
+      _this2.start();
     });
   };
   /**
@@ -585,6 +598,32 @@ var sparticles = (function (exports) {
     this.init = null;
     this.settings = null;
     this.el.removeChild(this.canvas);
+  };
+  /**
+   * set the canvas height and width based on either the input
+   * dom element, or the given width and height.
+   * @param {Number} width - the width of the canvas if not fluid
+   * @param {Number} height - the height of the canvas if not fluid
+   * @returns {HTMLCanvasElement} - the canvas element of the instance
+   */
+
+
+  Sparticles.prototype.setCanvasSize = function (width, height) {
+    if (typeof this.resizable === "undefined") {
+      this.resizable = !width && !height;
+    }
+
+    if (this.resizable) {
+      this.width = this.el.clientWidth;
+      this.height = this.el.clientHeight;
+    } else if (width && height) {
+      this.width = width;
+      this.height = height;
+    }
+
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+    return this.canvas;
   };
   /**
    * convert the input color to an array if it isn't already
@@ -628,16 +667,17 @@ var sparticles = (function (exports) {
   /**
    * set up the canvas and bind to a property for
    * access later on, append it to the DOM
+   * @param {Number} width - the width of the canvas if not fluid
+   * @param {Number} height - the height of the canvas if not fluid
    * @returns {HTMLCanvasElement} - the canvas element which was appended to DOM
    */
 
 
-  Sparticles.prototype.setupMainCanvas = function () {
+  Sparticles.prototype.setupMainCanvas = function (width, height) {
     this.canvas = document.createElement("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.ctx.globalCompositeOperation = this.settings.composition;
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
+    this.setCanvasSize(width, height);
     this.el.appendChild(this.canvas);
     return this.canvas;
   };
@@ -651,48 +691,48 @@ var sparticles = (function (exports) {
 
 
   Sparticles.prototype.setupOffscreenCanvasses = function (callback) {
-    var _this2 = this;
+    var _this3 = this;
 
     this.canvasses = this.canvasses || {};
     this.settings.color.forEach(function (color) {
-      _this2.canvasses[color] = _this2.canvasses[color] || {};
+      _this3.canvasses[color] = _this3.canvasses[color] || {};
 
-      if (_this2.settings.shape[0] === "image") {
-        _this2.loadAndDrawImages(color, callback);
+      if (_this3.settings.shape[0] === "image") {
+        _this3.loadAndDrawImages(color, callback);
       } else {
-        _this2.settings.shape.forEach(function (shape) {
-          _this2.canvasses[color][shape] = document.createElement("canvas");
-          var canvas = _this2.canvasses[color][shape];
+        _this3.settings.shape.forEach(function (shape) {
+          _this3.canvasses[color][shape] = document.createElement("canvas");
+          var canvas = _this3.canvasses[color][shape];
           var ctx = canvas.getContext("2d");
 
           switch (shape) {
             case "square":
-              _this2.drawOffscreenCanvasForSquare(canvas, ctx, color);
+              _this3.drawOffscreenCanvasForSquare(canvas, ctx, color);
 
               if (callback) callback();
               break;
 
             case "line":
-              _this2.drawOffscreenCanvasForLine(canvas, ctx, color);
+              _this3.drawOffscreenCanvasForLine(canvas, ctx, color);
 
               if (callback) callback();
               break;
 
             case "triangle":
-              _this2.drawOffscreenCanvasForTriangle(canvas, ctx, color);
+              _this3.drawOffscreenCanvasForTriangle(canvas, ctx, color);
 
               if (callback) callback();
               break;
 
             case "diamond":
-              _this2.drawOffscreenCanvasForDiamond(canvas, ctx, color);
+              _this3.drawOffscreenCanvasForDiamond(canvas, ctx, color);
 
               if (callback) callback();
               break;
 
             case "circle":
             default:
-              _this2.drawOffscreenCanvasForCircle(canvas, ctx, color);
+              _this3.drawOffscreenCanvasForCircle(canvas, ctx, color);
 
               if (callback) callback();
               break;
@@ -914,7 +954,7 @@ var sparticles = (function (exports) {
 
 
   Sparticles.prototype.loadAndDrawImages = function (color, callback) {
-    var _this3 = this;
+    var _this4 = this;
 
     var imgUrls = this.settings.imageUrl;
     var imageUrls = Array.isArray(imgUrls) ? imgUrls : [imgUrls];
@@ -924,17 +964,17 @@ var sparticles = (function (exports) {
     imageUrls.forEach(function (imageUrl, i) {
       var imgName = "image" + i;
 
-      _this3.images.push(imgName);
+      _this4.images.push(imgName);
 
-      _this3.canvasses[color][imgName] = document.createElement("canvas");
-      var canvas = _this3.canvasses[color][imgName];
+      _this4.canvasses[color][imgName] = document.createElement("canvas");
+      var canvas = _this4.canvasses[color][imgName];
       var ctx = canvas.getContext("2d");
       var image = new Image();
 
       image.onload = function () {
         imagesLoaded++;
 
-        _this3.drawImageOffscreenCanvas(image, canvas, ctx, color);
+        _this4.drawImageOffscreenCanvas(image, canvas, ctx, color);
 
         if (callback && imagesLoaded === imageCount) {
           callback();
