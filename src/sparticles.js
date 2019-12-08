@@ -32,7 +32,11 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {Number} [height] - the height of the canvas element
  * @returns - reference to a new Sparticles instance
  */
-export const Sparticles = function(node = document.body, options = {}, width, height) {
+export const Sparticles = function(node, options = {}, width, height) {
+  if (arguments.length === 1 && typeof arguments[0] === "object") {
+    options = node;
+    node = undefined;
+  }
   const defaults = {
     alphaSpeed: 10,
     alphaVariance: 1,
@@ -56,7 +60,7 @@ export const Sparticles = function(node = document.body, options = {}, width, he
     xVariance: 2,
     yVariance: 2,
   };
-  this.el = node;
+  this.el = node || document.body;
   this.settings = { ...defaults, ...options };
   this.init(width, height);
   window.addEventListener("resize", () => {
