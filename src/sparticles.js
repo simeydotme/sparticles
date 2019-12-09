@@ -14,6 +14,7 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
  * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
  * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
+ * @param {Number} [options.rotate=true] - is the particle set to rotate or not
  * @param {Number} [options.rotation=1] - default rotational speed for every particle
  * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
  * @param {Number} [options.alphaVariance=1] - variance in alpha change rate
@@ -52,6 +53,7 @@ export const Sparticles = function(node, options = {}, width, height) {
     minAlpha: 0,
     minSize: 1,
     parallax: 1,
+    rotate: true,
     rotation: 1,
     shape: "circle",
     speed: 10,
