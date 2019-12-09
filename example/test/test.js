@@ -17,7 +17,7 @@ let options = {
   composition: "source-over",
   count: 200,
   direction: 180,
-  float: 2,
+  drift: 0,
   glow: 0,
   imageUrl: [
     "./snowflake.png",
@@ -28,18 +28,19 @@ let options = {
     "https://image.flaticon.com/icons/svg/23/23901.svg",
     "https://image.flaticon.com/icons/svg/24/24286.svg"
   ],
-  maxAlpha: 2,
-  maxSize: 16,
-  minAlpha: -0.2,
-  minSize: 4,
-  parallax: 4,
-  rotation: 0.5,
-  shape: "image",
-  speed: 3.4,
+  maxAlpha: 1,
+  maxSize: 20,
+  minAlpha: 0,
+  minSize: 1,
+  parallax: 0,
+  rotate: true,
+  rotation: 0,
+  shape: "diamond",
+  speed: 0,
   style: "fill",
-  twinkle: false,
-  xVariance: 10,
-  yVariance: 2,
+  twinkle: true,
+  xVariance: 0,
+  yVariance: 0,
 };
 
 window.onload = function() {
@@ -50,7 +51,7 @@ window.onload = function() {
 
 window.initSparticles = function() {
   var $main = document.querySelector("main");
-  window.mySparticles = new sparticles.Sparticles(options);
+  window.mySparticles = new sparticles.Sparticles($main,options);
 };
 
 window.initStats = function() {
@@ -66,7 +67,7 @@ window.initStats = function() {
 
 window.initGui = function() {
   const s = window.mySparticles;
-  const shapes = ["circle", "square", "triangle", "line", "image"];
+  const shapes = ["circle", "square", "triangle", "diamond", "line", "image"];
   const styles = ["fill", "stroke", "both"];
   const colorOptions = ["single", "multi", "rainbow"];
   const composites = [
@@ -122,6 +123,7 @@ window.initGui = function() {
   part.add(s.settings, "count", 1, 500, 1).onFinishChange(rerender);
   part.add(s.settings, "shape", shapes).onFinishChange(rerender);
   part.add(s.settings, "style", styles).onFinishChange(rerender);
+  part.add(s.settings, "rotate").onFinishChange(rerender);
   const image = part.addFolder("Image");
   // image.add(s.settings, "imageUrl").onFinishChange(rerender);
   part.add(s.settings, "minSize", 1, 50, 1).onFinishChange(rerender);
@@ -132,7 +134,7 @@ window.initGui = function() {
   anim.add(s.settings, "rotation", 0, 100, 0.1).onFinishChange(rerender);
   const move = anim.addFolder("Movement");
   move.add(s.settings, "parallax", 0, 10, 0.1).onFinishChange(rerender);
-  move.add(s.settings, "float", 0, 10, 0.1).onFinishChange(rerender);
+  move.add(s.settings, "drift", 0, 10, 0.01).onFinishChange(rerender);
   move.add(s.settings, "xVariance", 0, 10, 0.1).onFinishChange(rerender);
   move.add(s.settings, "yVariance", 0, 10, 0.1).onFinishChange(rerender);
   const vis = gui.addFolder("Visual");
