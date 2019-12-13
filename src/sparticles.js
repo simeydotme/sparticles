@@ -23,6 +23,7 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {Number} [options.minSize=1] - minimum size of every particle
  * @param {Number} [options.maxSize=10] - maximum size of every particle
  * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
+ * @param {Boolean} [options.bounce=false] - should the particles bounce off edge of canvas
  * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
  * @param {Number} [options.glow=0] - the glow effect size of each particle
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
@@ -41,6 +42,7 @@ export const Sparticles = function(node, options = {}, width, height) {
   const defaults = {
     alphaSpeed: 10,
     alphaVariance: 1,
+    bounce: false,
     color: "white",
     composition: "source-over",
     count: 50,
@@ -237,6 +239,11 @@ Sparticles.prototype.setupOffscreenCanvasses = function(callback) {
 
           case "diamond":
             this.drawOffscreenCanvasForDiamond(canvas, ctx, color);
+            if (callback) callback();
+            break;
+
+          case "star":
+            this.drawOffscreenCanvasForStar(canvas, ctx, color);
             if (callback) callback();
             break;
 
@@ -445,6 +452,71 @@ Sparticles.prototype.drawOffscreenCanvasForDiamond = function(canvas, ctx, color
     startx + pointx,
     starty
   );
+  ctx.closePath();
+  this.renderColor(ctx, color);
+  return canvas;
+};
+
+/**
+ * create, setup and render an offscreen canvas for a
+ * Star Particle of the given color
+ * @param {HTMLCanvasElement} canvas - the canvas element
+ * @param {CanvasRenderingContext2D} ctx - the canvas context
+ * @param {String} color - the color to fill/stroke with
+ * @returns {HTMLCanvasElement} - the created offscreen canvas
+ */
+Sparticles.prototype.drawOffscreenCanvasForStar = function(canvas, ctx, color) {
+  const size = 52;
+  const lineSize = this.getLineSize(size);
+  const glowSize = this.getGlowSize(size);
+  const canvasSize = 52 + lineSize * 2 + glowSize;
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  this.renderGlow(ctx, color, size);
+  this.renderStyle(ctx, color, lineSize);
+  ctx.translate(lineSize / 2 + glowSize / 2, lineSize / 2 + glowSize / 2 - 1);
+  ctx.beginPath();
+  ctx.moveTo(27.76, 2.07);
+  ctx.lineTo(34.28, 15.46);
+  ctx.translate(36.01480792437574, 14.614221385040288);
+  ctx.arc(0, 0, 1.93, 2.687967128721911, 1.7293919056045395, 1);
+  ctx.translate(-36.01480792437574, -14.614221385040288);
+  ctx.lineTo(50.37, 18.7);
+  ctx.translate(50.10443046629834, 20.601544851632347);
+  ctx.arc(0, 0, 1.92, -1.4320339785975214, 0.8159284165499665, 0);
+  ctx.translate(-50.10443046629834, -20.601544851632347);
+  ctx.lineTo(40.78, 32.36);
+  ctx.translate(42.13415324373887, 33.735197801216785);
+  ctx.arc(0, 0, 1.93, -2.3484841809999386, -3.3054346524687857, 1);
+  ctx.translate(-42.13415324373887, -33.735197801216785);
+  ctx.lineTo(42.7, 48.76);
+  ctx.translate(40.81489078457234, 49.06734873663269);
+  ctx.arc(0, 0, 1.91, -0.16161824093711977, 2.052504457600845, 0);
+  ctx.translate(-40.81489078457234, -49.06734873663269);
+  ctx.lineTo(26.83, 43.76);
+  ctx.translate(25.939999999999998, 45.438660180024534);
+  ctx.arc(0, 0, 1.9, -1.083293536758034, -2.0582991168317593, 1);
+  ctx.translate(-25.939999999999998, -45.438660180024534);
+  ctx.lineTo(11.92, 50.7);
+  ctx.translate(11.046023488962076, 49.00168758523234);
+  ctx.arc(0, 0, 1.91, 1.0955254432622383, 3.3002085355055915, 0);
+  ctx.translate(-11.046023488962076, -49.00168758523234);
+  ctx.lineTo(11.7, 34);
+  ctx.translate(9.820265754085725, 33.66132734870218);
+  ctx.arc(0, 0, 1.91, 0.178258078542773, -0.7933922953534395, 1);
+  ctx.translate(-9.820265754085725, -33.66132734870218);
+  ctx.lineTo(0.57, 21.85);
+  ctx.translate(1.9278161466350117, 20.478418681981545);
+  ctx.arc(0, 0, 1.93, 2.351151232528948, 4.5627030955491055, 0);
+  ctx.translate(-1.9278161466350117, -20.478418681981545);
+  ctx.lineTo(16.31, 16.47);
+  ctx.translate(16.062056630005188, 14.576161547207466);
+  ctx.arc(0, 0, 1.91, 1.4406156600933306, 0.4870016654036473, 1);
+  ctx.translate(-16.062056630005188, -14.576161547207466);
+  ctx.lineTo(24.33, 2.07);
+  ctx.translate(26.045, 2.9107585860400085);
+  ctx.arc(0, 0, 1.91, -2.6857849028374465, -0.45580775075234703, 0);
+  ctx.translate(-26.045, -2.9107585860400085);
   ctx.closePath();
   this.renderColor(ctx, color);
   return canvas;

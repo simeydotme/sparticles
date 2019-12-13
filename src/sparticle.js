@@ -25,14 +25,30 @@ export const Sparticle = function(parent) {
  * these values do not change when the particle goes offscreen
  */
 Sparticle.prototype.init = function() {
+  const _ = this.settings;
   this.setup();
-  this.alpha = random(this.settings.minAlpha, this.settings.maxAlpha);
+  this.alpha = random(_.minAlpha, _.maxAlpha);
   this.shape = this.getShapeOrImage();
   this.fillColor = this.getColor();
   this.strokeColor = this.getColor();
-  this.px = round(random(-this.size * 2, this.canvas.width + this.size));
-  this.py = round(random(-this.size * 2, this.canvas.height + this.size));
-  this.rotation = this.settings.rotate ? radian(random(0, 360)) : 0;
+  this.rotation = _.rotate ? radian(random(0, 360)) : 0;
+  if (_.bounce) {
+    if (_.speed === 0) {
+      if (_.alphaSpeed > 0) {
+        this.alpha = 0;
+      }
+      this.px = round(random(this.canvas.width / 2 - this.size, this.canvas.width / 2 + this.size));
+      this.py = round(
+        random(this.canvas.height / 2 - this.size, this.canvas.height / 2 + this.size)
+      );
+    } else {
+      this.px = round(random(2, this.canvas.width - this.size - 2));
+      this.py = round(random(2, this.canvas.height - this.size - 2));
+    }
+  } else {
+    this.px = round(random(-this.size * 2, this.canvas.width + this.size));
+    this.py = round(random(-this.size * 2, this.canvas.height + this.size));
+  }
 };
 
 /**
@@ -75,14 +91,40 @@ Sparticle.prototype.reset = function() {
 };
 
 /**
+ * bounce the particle off the edge of canvas
+ * when it has touched
+ */
+Sparticle.prototype.bounce = function() {
+  // reverse the particle's Y position
+  if (this.py <= 0 || this.py + this.size >= this.canvas.height) {
+    this.dy = -this.dy;
+  }
+  // reverse the particle's X position
+  if (this.px <= 0 || this.px + this.size >= this.canvas.width) {
+    this.dx = -this.dx;
+  }
+};
+
+/**
  * check if the particle is off the canvas based
  * on it's current position
  * @returns {Boolean} is the particle completely off canvas
  */
 Sparticle.prototype.isOffCanvas = function() {
-  const topleft = 0 - this.size * 3;
-  const bottom = this.canvas.height + this.size * 3;
-  const right = this.canvas.width + this.size * 3;
+  const topleft = 0 - this.size * 2;
+  const bottom = this.canvas.height + this.size * 2;
+  const right = this.canvas.width + this.size * 2;
+  return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
+};
+
+/**
+ * check if the particle is touching the canvas edge
+ * @returns {Boolean} is the particle touching edge
+ */
+Sparticle.prototype.isTouchingEdge = function() {
+  const topleft = 0;
+  const bottom = this.canvas.height - this.size;
+  const right = this.canvas.width - this.size;
   return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
 };
 
@@ -301,7 +343,11 @@ Sparticle.prototype.updateTwinkle = function() {
  * according to the settings given
  */
 Sparticle.prototype.updatePosition = function() {
-  if (this.isOffCanvas()) {
+  if (this.settings.bounce && this.isTouchingEdge()) {
+    this.bounce();
+    this.px += this.dx;
+    this.py += this.dy;
+  } else if (this.isOffCanvas()) {
     this.reset();
   } else {
     this.px += this.dx;
