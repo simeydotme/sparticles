@@ -469,7 +469,7 @@ Sparticles.prototype.drawOffscreenCanvasForStar = function(canvas, ctx, color) {
   const size = 52;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
-  const canvasSize = 52 + lineSize * 2 + glowSize;
+  const canvasSize = size + lineSize * 2 + glowSize;
   canvas.width = canvasSize;
   canvas.height = canvasSize;
   this.renderGlow(ctx, color, size);

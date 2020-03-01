@@ -12,11 +12,22 @@ export const Sparticle = function(parent) {
     this.images = parent.images;
     this.settings = parent.settings;
     this.ctx = parent.canvas.getContext("2d");
+    this.setup();
     this.init();
   } else {
     console.warn("Invalid parameters given to Sparticle()", arguments);
   }
   return this;
+};
+
+/**
+ * set up the particle with some random values
+ * before it is initialised on the canvas
+ * these values will randomize when the particle goes offscreen
+ */
+Sparticle.prototype.setup = function() {
+  this.frame = 0;
+  this.frameoffset = round(random(0, 360));
 };
 
 /**
@@ -26,46 +37,38 @@ export const Sparticle = function(parent) {
  */
 Sparticle.prototype.init = function() {
   const _ = this.settings;
-  this.setup();
-  this.alpha = random(_.minAlpha, _.maxAlpha);
-  this.shape = this.getShapeOrImage();
-  this.fillColor = this.getColor();
-  this.strokeColor = this.getColor();
-  this.rotation = _.rotate ? radian(random(0, 360)) : 0;
-  if (_.bounce) {
-    if (_.speed === 0) {
-      if (_.alphaSpeed > 0) {
-        this.alpha = 0;
-      }
-      this.px = round(random(this.canvas.width / 2 - this.size, this.canvas.width / 2 + this.size));
-      this.py = round(
-        random(this.canvas.height / 2 - this.size, this.canvas.height / 2 + this.size)
-      );
-    } else {
-      this.px = round(random(2, this.canvas.width - this.size - 2));
-      this.py = round(random(2, this.canvas.height - this.size - 2));
-    }
-  } else {
-    this.px = round(random(-this.size * 2, this.canvas.width + this.size));
-    this.py = round(random(-this.size * 2, this.canvas.height + this.size));
-  }
-};
-
-/**
- * set up the particle with some random values
- * before it is initialised on the canvas
- * these values will randomize when the particle goes offscreen
- */
-Sparticle.prototype.setup = function() {
-  const _ = this.settings;
-  this.frame = 0;
-  this.frameoffset = round(random(0, 360));
   this.size = round(random(_.minSize, _.maxSize));
   this.da = this.getAlphaDelta();
   this.dx = this.getDeltaX();
   this.dy = this.getDeltaY();
   this.dd = this.getDriftDelta();
   this.dr = this.getRotationDelta();
+  this.alpha = random(_.minAlpha, _.maxAlpha);
+  this.shape = this.getShapeOrImage();
+  this.fillColor = this.getColor();
+  this.strokeColor = this.getColor();
+  this.rotation = _.rotate ? radian(random(0, 360)) : 0;
+  this.initPosition();
+};
+
+Sparticle.prototype.initPosition = function() {
+  const _ = this.settings;
+  const canvas = this.canvas;
+  if (_.bounce) {
+    if (_.speed === 0) {
+      if (_.alphaSpeed > 0) {
+        this.alpha = 0;
+      }
+      this.px = canvas.width / 2 - this.size / 2;
+      this.py = canvas.height / 2 - this.size / 2;
+    } else {
+      this.px = round(random(2, canvas.width - this.size - 2));
+      this.py = round(random(2, canvas.height - this.size - 2));
+    }
+  } else {
+    this.px = round(random(-this.size * 2, canvas.width + this.size));
+    this.py = round(random(-this.size * 2, canvas.height + this.size));
+  }
 };
 
 /**
