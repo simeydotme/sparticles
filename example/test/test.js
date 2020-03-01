@@ -11,11 +11,12 @@ let colors = {
 };
 
 let options = {
-  alphaSpeed: 10,
+  alphaSpeed: 0,
   alphaVariance: 1,
   color: [colors.color1, colors.color2, colors.color3, colors.color4],
   composition: "source-over",
-  count: 200,
+  bounce: true,
+  count: 100,
   direction: 180,
   drift: 0,
   glow: 0,
@@ -29,18 +30,18 @@ let options = {
     "https://image.flaticon.com/icons/svg/24/24286.svg"
   ],
   maxAlpha: 1,
-  maxSize: 20,
+  maxSize: 10,
   minAlpha: 0,
-  minSize: 1,
+  minSize: 10,
   parallax: 0,
   rotate: true,
   rotation: 0,
-  shape: "diamond",
+  shape: "star",
   speed: 0,
   style: "fill",
-  twinkle: true,
-  xVariance: 0,
-  yVariance: 0,
+  twinkle: false,
+  xVariance: 5,
+  yVariance: 5,
 };
 
 window.onload = function() {
@@ -67,7 +68,7 @@ window.initStats = function() {
 
 window.initGui = function() {
   const s = window.mySparticles;
-  const shapes = ["circle", "square", "triangle", "diamond", "line", "image"];
+  const shapes = ["circle", "square", "triangle", "diamond", "star", "line", "image"];
   const styles = ["fill", "stroke", "both"];
   const colorOptions = ["single", "multi", "rainbow"];
   const composites = [
@@ -124,6 +125,7 @@ window.initGui = function() {
   part.add(s.settings, "shape", shapes).onFinishChange(rerender);
   part.add(s.settings, "style", styles).onFinishChange(rerender);
   part.add(s.settings, "rotate").onFinishChange(rerender);
+  part.add(s.settings, "bounce").onFinishChange(rerender);
   const image = part.addFolder("Image");
   // image.add(s.settings, "imageUrl").onFinishChange(rerender);
   part.add(s.settings, "minSize", 1, 50, 1).onFinishChange(rerender);
@@ -138,7 +140,7 @@ window.initGui = function() {
   move.add(s.settings, "xVariance", 0, 10, 0.1).onFinishChange(rerender);
   move.add(s.settings, "yVariance", 0, 10, 0.1).onFinishChange(rerender);
   const vis = gui.addFolder("Visual");
-  vis.add(s.settings, "glow", 0,50).onFinishChange(rerender);
+  vis.add(s.settings, "glow", 0,150).onFinishChange(rerender);
   vis.add(s.settings, "composition", composites).onFinishChange(rerender);
   const alpha = vis.addFolder("Alpha");
   alpha.add(s.settings, "twinkle").onFinishChange(rerender);

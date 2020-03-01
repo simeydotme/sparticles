@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.9.0
+ * @version 0.9.1
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  */
@@ -167,7 +167,9 @@ var sparticles = (function (exports) {
     var max = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
     var value = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : Math.random();
 
-    if ((min !== 0 || max !== 1) && max > min) {
+    if (min === max) {
+      value = min;
+    } else if ((min !== 0 || max !== 1) && max > min) {
       value = value * (max - min) + min;
     }
 
@@ -225,6 +227,7 @@ var sparticles = (function (exports) {
       this.images = parent.images;
       this.settings = parent.settings;
       this.ctx = parent.canvas.getContext("2d");
+      this.setup();
       this.init();
     } else {
       console.warn("Invalid parameters given to Sparticle()", arguments);
@@ -233,38 +236,58 @@ var sparticles = (function (exports) {
     return this;
   };
   /**
-   * initialise a particle with the default values from
-   * the Sparticles instance settings.
-   * these values do not change when the particle goes offscreen
-   */
-
-  Sparticle.prototype.init = function () {
-    this.setup();
-    this.alpha = random(this.settings.minAlpha, this.settings.maxAlpha);
-    this.shape = this.getShapeOrImage();
-    this.fillColor = this.getColor();
-    this.strokeColor = this.getColor();
-    this.px = round(random(-this.size * 2, this.canvas.width + this.size));
-    this.py = round(random(-this.size * 2, this.canvas.height + this.size));
-    this.rotation = this.settings.rotate ? radian(random(0, 360)) : 0;
-  };
-  /**
    * set up the particle with some random values
    * before it is initialised on the canvas
    * these values will randomize when the particle goes offscreen
    */
 
-
   Sparticle.prototype.setup = function () {
-    var _ = this.settings;
     this.frame = 0;
     this.frameoffset = round(random(0, 360));
+  };
+  /**
+   * initialise a particle with the default values from
+   * the Sparticles instance settings.
+   * these values do not change when the particle goes offscreen
+   */
+
+
+  Sparticle.prototype.init = function () {
+    var _ = this.settings;
     this.size = round(random(_.minSize, _.maxSize));
     this.da = this.getAlphaDelta();
     this.dx = this.getDeltaX();
     this.dy = this.getDeltaY();
     this.dd = this.getDriftDelta();
     this.dr = this.getRotationDelta();
+    this.alpha = random(_.minAlpha, _.maxAlpha);
+    this.shape = this.getShapeOrImage();
+    this.fillColor = this.getColor();
+    this.strokeColor = this.getColor();
+    this.rotation = _.rotate ? radian(random(0, 360)) : 0;
+    this.initPosition();
+  };
+
+  Sparticle.prototype.initPosition = function () {
+    var _ = this.settings;
+    var canvas = this.canvas;
+
+    if (_.bounce) {
+      if (_.speed === 0) {
+        if (_.alphaSpeed > 0) {
+          this.alpha = 0;
+        }
+
+        this.px = canvas.width / 2 - this.size / 2;
+        this.py = canvas.height / 2 - this.size / 2;
+      } else {
+        this.px = round(random(2, canvas.width - this.size - 2));
+        this.py = round(random(2, canvas.height - this.size - 2));
+      }
+    } else {
+      this.px = round(random(-this.size * 2, canvas.width + this.size));
+      this.py = round(random(-this.size * 2, canvas.height + this.size));
+    }
   };
   /**
    * reset the particle after it has gone off canvas.
@@ -291,6 +314,23 @@ var sparticles = (function (exports) {
     }
   };
   /**
+   * bounce the particle off the edge of canvas
+   * when it has touched
+   */
+
+
+  Sparticle.prototype.bounce = function () {
+    // reverse the particle's Y position
+    if (this.py <= 0 || this.py + this.size >= this.canvas.height) {
+      this.dy = -this.dy;
+    } // reverse the particle's X position
+
+
+    if (this.px <= 0 || this.px + this.size >= this.canvas.width) {
+      this.dx = -this.dx;
+    }
+  };
+  /**
    * check if the particle is off the canvas based
    * on it's current position
    * @returns {Boolean} is the particle completely off canvas
@@ -298,9 +338,21 @@ var sparticles = (function (exports) {
 
 
   Sparticle.prototype.isOffCanvas = function () {
-    var topleft = 0 - this.size * 3;
-    var bottom = this.canvas.height + this.size * 3;
-    var right = this.canvas.width + this.size * 3;
+    var topleft = 0 - this.size * 2;
+    var bottom = this.canvas.height + this.size * 2;
+    var right = this.canvas.width + this.size * 2;
+    return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
+  };
+  /**
+   * check if the particle is touching the canvas edge
+   * @returns {Boolean} is the particle touching edge
+   */
+
+
+  Sparticle.prototype.isTouchingEdge = function () {
+    var topleft = 0;
+    var bottom = this.canvas.height - this.size;
+    var right = this.canvas.width - this.size;
     return this.px < topleft || this.px > right || this.py < topleft || this.py > bottom;
   };
   /**
@@ -544,7 +596,11 @@ var sparticles = (function (exports) {
 
 
   Sparticle.prototype.updatePosition = function () {
-    if (this.isOffCanvas()) {
+    if (this.settings.bounce && this.isTouchingEdge()) {
+      this.bounce();
+      this.px += this.dx;
+      this.py += this.dy;
+    } else if (this.isOffCanvas()) {
       this.reset();
     } else {
       this.px += this.dx;
@@ -635,6 +691,7 @@ var sparticles = (function (exports) {
    * @param {Number} [options.minSize=1] - minimum size of every particle
    * @param {Number} [options.maxSize=10] - maximum size of every particle
    * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
+   * @param {Boolean} [options.bounce=false] - should the particles bounce off edge of canvas
    * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
    * @param {Number} [options.glow=0] - the glow effect size of each particle
    * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
@@ -661,6 +718,7 @@ var sparticles = (function (exports) {
     var defaults = {
       alphaSpeed: 10,
       alphaVariance: 1,
+      bounce: false,
       color: "white",
       composition: "source-over",
       count: 50,
@@ -884,6 +942,12 @@ var sparticles = (function (exports) {
               if (callback) callback();
               break;
 
+            case "star":
+              _this3.drawOffscreenCanvasForStar(canvas, ctx, color);
+
+              if (callback) callback();
+              break;
+
             case "circle":
             default:
               _this3.drawOffscreenCanvasForCircle(canvas, ctx, color);
@@ -1071,6 +1135,72 @@ var sparticles = (function (exports) {
     ctx.bezierCurveTo(mid + anchor * 2, mid - anchor / 2, mid + anchor / 2, mid - anchor * 2, mid + half - pointx, mid);
     ctx.bezierCurveTo(mid + anchor / 2, mid + anchor * 2, mid + anchor * 2, mid + anchor / 2, mid, mid + half);
     ctx.bezierCurveTo(mid - anchor * 2, mid + anchor / 2, mid - anchor / 2, mid + anchor * 2, startx + pointx, starty);
+    ctx.closePath();
+    this.renderColor(ctx, color);
+    return canvas;
+  };
+  /**
+   * create, setup and render an offscreen canvas for a
+   * Star Particle of the given color
+   * @param {HTMLCanvasElement} canvas - the canvas element
+   * @param {CanvasRenderingContext2D} ctx - the canvas context
+   * @param {String} color - the color to fill/stroke with
+   * @returns {HTMLCanvasElement} - the created offscreen canvas
+   */
+
+
+  Sparticles.prototype.drawOffscreenCanvasForStar = function (canvas, ctx, color) {
+    var size = 52;
+    var lineSize = this.getLineSize(size);
+    var glowSize = this.getGlowSize(size);
+    var canvasSize = size + lineSize * 2 + glowSize;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    this.renderGlow(ctx, color, size);
+    this.renderStyle(ctx, color, lineSize);
+    ctx.translate(lineSize / 2 + glowSize / 2, lineSize / 2 + glowSize / 2 - 1);
+    ctx.beginPath();
+    ctx.moveTo(27.76, 2.07);
+    ctx.lineTo(34.28, 15.46);
+    ctx.translate(36.01480792437574, 14.614221385040288);
+    ctx.arc(0, 0, 1.93, 2.687967128721911, 1.7293919056045395, 1);
+    ctx.translate(-36.01480792437574, -14.614221385040288);
+    ctx.lineTo(50.37, 18.7);
+    ctx.translate(50.10443046629834, 20.601544851632347);
+    ctx.arc(0, 0, 1.92, -1.4320339785975214, 0.8159284165499665, 0);
+    ctx.translate(-50.10443046629834, -20.601544851632347);
+    ctx.lineTo(40.78, 32.36);
+    ctx.translate(42.13415324373887, 33.735197801216785);
+    ctx.arc(0, 0, 1.93, -2.3484841809999386, -3.3054346524687857, 1);
+    ctx.translate(-42.13415324373887, -33.735197801216785);
+    ctx.lineTo(42.7, 48.76);
+    ctx.translate(40.81489078457234, 49.06734873663269);
+    ctx.arc(0, 0, 1.91, -0.16161824093711977, 2.052504457600845, 0);
+    ctx.translate(-40.81489078457234, -49.06734873663269);
+    ctx.lineTo(26.83, 43.76);
+    ctx.translate(25.939999999999998, 45.438660180024534);
+    ctx.arc(0, 0, 1.9, -1.083293536758034, -2.0582991168317593, 1);
+    ctx.translate(-25.939999999999998, -45.438660180024534);
+    ctx.lineTo(11.92, 50.7);
+    ctx.translate(11.046023488962076, 49.00168758523234);
+    ctx.arc(0, 0, 1.91, 1.0955254432622383, 3.3002085355055915, 0);
+    ctx.translate(-11.046023488962076, -49.00168758523234);
+    ctx.lineTo(11.7, 34);
+    ctx.translate(9.820265754085725, 33.66132734870218);
+    ctx.arc(0, 0, 1.91, 0.178258078542773, -0.7933922953534395, 1);
+    ctx.translate(-9.820265754085725, -33.66132734870218);
+    ctx.lineTo(0.57, 21.85);
+    ctx.translate(1.9278161466350117, 20.478418681981545);
+    ctx.arc(0, 0, 1.93, 2.351151232528948, 4.5627030955491055, 0);
+    ctx.translate(-1.9278161466350117, -20.478418681981545);
+    ctx.lineTo(16.31, 16.47);
+    ctx.translate(16.062056630005188, 14.576161547207466);
+    ctx.arc(0, 0, 1.91, 1.4406156600933306, 0.4870016654036473, 1);
+    ctx.translate(-16.062056630005188, -14.576161547207466);
+    ctx.lineTo(24.33, 2.07);
+    ctx.translate(26.045, 2.9107585860400085);
+    ctx.arc(0, 0, 1.91, -2.6857849028374465, -0.45580775075234703, 0);
+    ctx.translate(-26.045, -2.9107585860400085);
     ctx.closePath();
     this.renderColor(ctx, color);
     return canvas;
