@@ -1,6 +1,6 @@
 $(function() {
 
   var $main = $("main");
-  window.mySparticles = new sparticles.Sparticles($main.get(0));
+  window.mySparticles = new Sparticles($main.get(0));
 
 });
