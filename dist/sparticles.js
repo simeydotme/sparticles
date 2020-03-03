@@ -1,26 +1,12 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.9.1
+ * @version 0.10.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  */
 
-var sparticles = (function (exports) {
+var Sparticles = (function () {
   'use strict';
-
-  function _typeof(obj) {
-    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-      _typeof = function (obj) {
-        return typeof obj;
-      };
-    } else {
-      _typeof = function (obj) {
-        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-      };
-    }
-
-    return _typeof(obj);
-  }
 
   function _defineProperty(obj, key, value) {
     if (key in obj) {
@@ -682,22 +668,22 @@ var sparticles = (function (exports) {
    * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
    * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
    * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
-   * @param {Number} [options.rotate=true] - is the particle set to rotate or not
+   * @param {Number} [options.rotate=true] - can particles rotate
    * @param {Number} [options.rotation=1] - default rotational speed for every particle
    * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
-   * @param {Number} [options.alphaVariance=1] - variance in alpha change rate
+   * @param {Number} [options.alphaVariance=1] - random deviation of alpha change
    * @param {Number} [options.minAlpha=0] - minumum alpha value of every particle
    * @param {Number} [options.maxAlpha=1] - maximum alpha value of every particle
    * @param {Number} [options.minSize=1] - minimum size of every particle
    * @param {Number} [options.maxSize=10] - maximum size of every particle
-   * @param {String} [options.style=fill] - fill style of particles (one of; fill, stroke, both)
+   * @param {String} [options.style=fill] - fill style of particles (one of; "fill", "stroke")
    * @param {Boolean} [options.bounce=false] - should the particles bounce off edge of canvas
-   * @param {Number} [options.float=1] - the "floatiness" of particles which have a direction at a 90 degree value (±20)
+   * @param {Number} [options.drift=1] - the "driftiness" of particles which have a direction at a 90(±20) degree value
    * @param {Number} [options.glow=0] - the glow effect size of each particle
    * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
-   * @param {String} [options.imageUrl=] - if style is "image", define an image url (can be data-uri, must be square (1:1 ratio))
-   * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
    * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
+   * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
+   * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
    * @param {Number} [width] - the width of the canvas element
    * @param {Number} [height] - the height of the canvas element
    * @returns - reference to a new Sparticles instance
@@ -710,7 +696,7 @@ var sparticles = (function (exports) {
     var width = arguments.length > 2 ? arguments[2] : undefined;
     var height = arguments.length > 3 ? arguments[3] : undefined;
 
-    if (arguments.length === 1 && _typeof(arguments[0]) === "object") {
+    if (arguments.length === 1 && !(arguments[0] instanceof HTMLElement)) {
       options = node;
       node = undefined;
     }
@@ -723,7 +709,7 @@ var sparticles = (function (exports) {
       composition: "source-over",
       count: 50,
       direction: 180,
-      float: 1,
+      drift: 1,
       glow: 0,
       imageUrl: "",
       maxAlpha: 1,
@@ -758,6 +744,7 @@ var sparticles = (function (exports) {
    * @param {Number} width - the width of the canvas if not fluid
    * @param {Number} height - the height of the canvas if not fluid
    */
+
 
   Sparticles.prototype.init = function (width, height) {
     var _this2 = this;
@@ -1348,8 +1335,6 @@ var sparticles = (function (exports) {
     return this.sparticles;
   };
 
-  exports.Sparticles = Sparticles;
+  return Sparticles;
 
-  return exports;
-
-}({}));
+}());
