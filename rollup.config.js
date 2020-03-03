@@ -20,14 +20,20 @@ export default [
     input: "src/sparticles.js",
     output: [
       {
-        name: "sparticles",
+        file: "dist/sparticles.esm.js",
+        format: "esm",
+        banner: banner(),
+        plugins: [filesize()],
+      },
+      {
+        name: "Sparticles",
         file: "dist/sparticles.js",
         format: "iife",
         banner: banner(),
         plugins: [filesize()],
       },
       {
-        name: "sparticles",
+        name: "Sparticles",
         file: "dist/sparticles.min.js",
         format: "iife",
         banner: banner(),
