@@ -144,7 +144,7 @@ Sparticles.prototype.setCanvasSize = function(width, height) {
   if (this.resizable) {
     this.width = this.el.clientWidth;
     this.height = this.el.clientHeight;
-  } else if (width && height) {
+  } else {
     this.width = width;
     this.height = height;
   }
