@@ -24,10 +24,10 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {Number} [options.maxSize=10] - maximum size of every particle
  * @param {String} [options.style=fill] - fill style of particles (one of; "fill", "stroke" or "both")
  * @param {Boolean} [options.bounce=false] - should the particles bounce off edge of canvas
- * @param {Number} [options.drift=1] - the "driftiness" of particles which have a direction at a 90(±20) degree value
+ * @param {Number} [options.drift=1] - the "driftiness" of particles which have a horizontal/vertical direction
  * @param {Number} [options.glow=0] - the glow effect size of each particle
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
- * @param {(String|String[])} [options.color=white] - css color as string, or array or color strings (can also be "rainbow")
+ * @param {(String|String[])} [options.color=white] - css color as string, or array of color strings (can also be "rainbow")
  * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
  * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
  * @param {Number} [width] - the width of the canvas element
