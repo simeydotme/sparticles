@@ -160,7 +160,7 @@ Sparticles.prototype.setCanvasSize = function(width, height) {
 Sparticles.prototype.createColorArray = function() {
   if (!Array.isArray(this.settings.color)) {
     if (this.settings.color === "rainbow") {
-      const colors = 50;
+      const colors = 100;
       this.settings.color = [];
       for (let i = 0; i < colors; i++) {
         this.settings.color[i] = randomHsl();
