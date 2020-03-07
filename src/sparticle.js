@@ -26,17 +26,9 @@ export const Sparticle = function(parent) {
  * these values will randomize when the particle goes offscreen
  */
 Sparticle.prototype.setup = function() {
+  const _ = this.settings;
   this.frame = 0;
   this.frameoffset = round(random(0, 360));
-};
-
-/**
- * initialise a particle with the default values from
- * the Sparticles instance settings.
- * these values do not change when the particle goes offscreen
- */
-Sparticle.prototype.init = function() {
-  const _ = this.settings;
   this.size = round(random(_.minSize, _.maxSize));
   this.da = this.getAlphaDelta();
   this.dx = this.getDeltaX();
@@ -45,9 +37,17 @@ Sparticle.prototype.init = function() {
   this.dr = this.getRotationDelta();
   this.alpha = random(_.minAlpha, _.maxAlpha);
   this.shape = this.getShapeOrImage();
-  this.fillColor = this.getColor();
-  this.strokeColor = this.getColor();
+  this.style = this.getStyle();
+  this.color = this.getColor();
   this.rotation = _.rotate ? radian(random(0, 360)) : 0;
+};
+
+/**
+ * initialise a particle with the default values from
+ * the Sparticles instance settings.
+ * these values do not change when the particle goes offscreen
+ */
+Sparticle.prototype.init = function() {
   this.initPosition();
 };
 
@@ -157,6 +157,19 @@ Sparticle.prototype.getShapeOrImage = function() {
       return randomArray(shape);
     }
   }
+};
+
+/**
+ * get the style of the particle, either "fill" or "stroke"
+ * depending on the settings as fill/stroke/both
+ * @returns {String} - either "fill" or "stroke"
+ */
+Sparticle.prototype.getStyle = function() {
+  let style = this.settings.style;
+  if (style !== "fill" && style !== "stroke") {
+    style = randomArray(["fill", "stroke"]);
+  }
+  return style;
 };
 
 /**
@@ -396,8 +409,8 @@ Sparticle.prototype.updateDrift = function() {
   }
 };
 
-Sparticle.prototype.render = function(images) {
-  const offscreenCanvas = images[this.fillColor][this.shape];
+Sparticle.prototype.render = function(canvasses) {
+  const offscreenCanvas = canvasses[this.color][this.shape][this.style];
   const canvasSize = offscreenCanvas.width;
   const scale = this.size / canvasSize;
   const px = this.px / scale;
