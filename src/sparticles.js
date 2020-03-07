@@ -100,7 +100,7 @@ Sparticles.prototype.start = function() {
   const me = this;
   if (!this.loop) {
     this.loop = new AnimationFrame(t => {
-      me.render(t);
+      me.drawFrame(t);
     });
   }
   this.loop.start();
@@ -618,8 +618,7 @@ Sparticles.prototype.drawImageOffscreenCanvas = function(image, canvas, ctx, col
 };
 
 /**
- * create an array, and then loop through to the count
- * value and populate the array with new Sparticle instances.
+ * create an array and populate it with new Sparticle instances.
  * @returns {Array} the array of Sparticle instances
  */
 Sparticles.prototype.createSparticles = function() {
@@ -634,11 +633,12 @@ Sparticles.prototype.createSparticles = function() {
 };
 
 /**
- * wipe the canvas, update each particle, and then render
- * each particle to the canvas
+ * - wipe the canvas,
+ * - update each sparticle,
+ * - render each sparticle
  * @returns {Array} the array of Sparticle instances
  */
-Sparticles.prototype.render = function() {
+Sparticles.prototype.drawFrame = function() {
   this.ctx.clearRect(0, 0, this.width, this.height);
   for (const sparticle of this.sparticles) {
     sparticle.update().render(this.canvasses);
