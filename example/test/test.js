@@ -52,7 +52,7 @@ window.onload = function() {
 
 window.initSparticles = function() {
   var $main = document.querySelector("main");
-  window.mySparticles = new sparticles.Sparticles($main,options);
+  window.mySparticles = new Sparticles($main,options);
 };
 
 window.initStats = function() {
