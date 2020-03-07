@@ -117,14 +117,17 @@ Sparticles.prototype.stop = function() {
  * destroy the current instance and free up some memory
  */
 Sparticles.prototype.destroy = function() {
+  // stop the rendering and updating
   this.stop();
-  this.sparticles = null;
-  this.canvasses = null;
-  this.start = null;
-  this.stop = null;
-  this.init = null;
-  this.settings = null;
+  // remove the canvas element from the DOM
   this.el.removeChild(this.canvas);
+  // delete all the properties from the instance
+  // to free up memory
+  for (const prop in this) {
+    if (this.hasOwnProperty(prop)) {
+      delete this[prop];
+    }
+  }
 };
 
 /**
