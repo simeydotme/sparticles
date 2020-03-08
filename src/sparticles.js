@@ -5,8 +5,8 @@ import { clamp, randomHsl } from "./helpers.js";
 /**
  * Sparticles Constructor;
  * Create a <canvas>, append to the given node, and start the particle effect
- * @param {HTMLElement} [node] - element to which canvas is appended to
- * @param {Object} [options] - settings to use for the particle effect
+ * @param {HTMLElement} [node=document.body] - element to which canvas is appended to
+ * @param {Object} [options={}] - settings to use for the particle effect
  * @param {String} [options.composition=source-over] - canvas globalCompositeOperation value for particles
  * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
  * @param {Number} [options.speed=10] - default velocity of every particle
@@ -31,13 +31,18 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
  * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
  * @param {Number} [width] - the width of the canvas element
- * @param {Number} [height] - the height of the canvas element
- * @returns - reference to a new Sparticles instance
+ * @param {Number} [height=width] - the height of the canvas element
+ * @returns {Object} - reference to a new Sparticles instance
  */
-const Sparticles = function(node, options = {}, width, height) {
-  if (arguments.length === 1 && !(arguments[0] instanceof HTMLElement)) {
-    options = node;
+const Sparticles = function(node, options, width, height) {
+  if (arguments.length >= 1 && !(arguments[0] instanceof HTMLElement)) {
+    options = arguments[0];
+    width = arguments[1];
+    height = arguments[2];
     node = undefined;
+  }
+  if (width && !height) {
+    height = width;
   }
   const defaults = {
     alphaSpeed: 10,
@@ -66,31 +71,43 @@ const Sparticles = function(node, options = {}, width, height) {
   };
   this.el = node || document.body;
   this.settings = { ...defaults, ...options };
-  this.init(width, height);
-  window.addEventListener("resize", () => {
-    clearTimeout(this.resizeTimer);
-    this.resizeTimer = setTimeout(() => {
-      this.setCanvasSize();
-      this.createSparticles();
-    }, 200);
-  });
-  return this;
+  this.resizable = !width && !height;
+  this.width = this.resizable ? this.el.clientWidth : width;
+  this.height = this.resizable ? this.el.clientHeight : height;
+  return this.init();
 };
 
 /**
  * initialise the sparticles instance
- * @param {Number} width - the width of the canvas if not fluid
- * @param {Number} height - the height of the canvas if not fluid
+ * @returns {Object} - reference to the Sparticles instance
  */
-Sparticles.prototype.init = function(width, height) {
+Sparticles.prototype.init = function() {
   this.sparticles = [];
   this.createColorArray();
   this.createShapeArray();
-  this.setupMainCanvas(width, height);
+  this.setupMainCanvas();
   this.setupOffscreenCanvasses(() => {
     this.createSparticles();
     this.start();
   });
+  window.addEventListener("resize", this);
+  return this;
+};
+
+/**
+ * debounce a canvas resize and reset the particles
+ */
+Sparticles.prototype.handleEvent = function(event) {
+  if (event.type === "resize") {
+    clearTimeout(this.resizeTimer);
+    this.resizeTimer = setTimeout(() => {
+      if (this.resizable) {
+        this.width = this.el.clientWidth;
+        this.height = this.el.clientHeight;
+        this.setCanvasSize().resetSparticles();
+      }
+    }, 200);
+  }
 };
 
 /**
@@ -121,6 +138,8 @@ Sparticles.prototype.destroy = function() {
   this.stop();
   // remove the canvas element from the DOM
   this.el.removeChild(this.canvas);
+  // remove the resize event for this instance
+  window.removeEventListener("resize", this);
   // delete all the properties from the instance
   // to free up memory
   for (const prop in this) {
@@ -131,26 +150,20 @@ Sparticles.prototype.destroy = function() {
 };
 
 /**
- * set the canvas height and width based on either the input
- * dom element, or the given width and height.
- * @param {Number} width - the width of the canvas if not fluid
- * @param {Number} height - the height of the canvas if not fluid
- * @returns {HTMLCanvasElement} - the canvas element of the instance
+ * set the canvas width and height
+ * @param {Number} width - the width of the canvas
+ * @param {Number} height - the height of the canvas
+ * @returns {Object} - the Sparticle instance (for chaining)
  */
 Sparticles.prototype.setCanvasSize = function(width, height) {
-  if (typeof this.resizable === "undefined") {
-    this.resizable = !width && !height;
+  if (width) {
+    this.resizable = false;
   }
-  if (this.resizable) {
-    this.width = this.el.clientWidth;
-    this.height = this.el.clientHeight;
-  } else {
-    this.width = width;
-    this.height = height;
-  }
+  this.width = width || this.width;
+  this.height = height || this.height;
   this.canvas.width = this.width;
   this.canvas.height = this.height;
-  return this.canvas;
+  return this;
 };
 
 /**
@@ -190,15 +203,13 @@ Sparticles.prototype.createShapeArray = function() {
 /**
  * set up the canvas and bind to a property for
  * access later on, append it to the DOM
- * @param {Number} width - the width of the canvas if not fluid
- * @param {Number} height - the height of the canvas if not fluid
  * @returns {HTMLCanvasElement} - the canvas element which was appended to DOM
  */
-Sparticles.prototype.setupMainCanvas = function(width, height) {
+Sparticles.prototype.setupMainCanvas = function() {
   this.canvas = document.createElement("canvas");
   this.ctx = this.canvas.getContext("2d");
   this.ctx.globalCompositeOperation = this.settings.composition;
-  this.setCanvasSize(width, height);
+  this.setCanvasSize();
   this.el.appendChild(this.canvas);
   return this.canvas;
 };
@@ -620,7 +631,7 @@ Sparticles.prototype.drawImageOffscreenCanvas = function(image, canvas, ctx, col
  * create an array and populate it with new Sparticle instances.
  * @returns {Array} the array of Sparticle instances
  */
-Sparticles.prototype.createSparticles = function() {
+Sparticles.prototype.resetSparticles = Sparticles.prototype.createSparticles = function() {
   this.sparticles = [];
   for (let i = 0; i < this.settings.count; i++) {
     this.sparticles.push(new Sparticle(this));
