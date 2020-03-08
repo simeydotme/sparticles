@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.11.2
+ * @version 0.12.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -674,8 +674,8 @@ var Sparticles = (function () {
   /**
    * Sparticles Constructor;
    * Create a <canvas>, append to the given node, and start the particle effect
-   * @param {HTMLElement} [node] - element to which canvas is appended to
-   * @param {Object} [options] - settings to use for the particle effect
+   * @param {HTMLElement} [node=document.body] - element to which canvas is appended to
+   * @param {Object} [options={}] - settings to use for the particle effect
    * @param {String} [options.composition=source-over] - canvas globalCompositeOperation value for particles
    * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
    * @param {Number} [options.speed=10] - default velocity of every particle
@@ -700,20 +700,20 @@ var Sparticles = (function () {
    * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
    * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
    * @param {Number} [width] - the width of the canvas element
-   * @param {Number} [height] - the height of the canvas element
-   * @returns - reference to a new Sparticles instance
+   * @param {Number} [height=width] - the height of the canvas element
+   * @returns {Object} - reference to a new Sparticles instance
    */
 
-  var Sparticles = function Sparticles(node) {
-    var _this = this;
-
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    var width = arguments.length > 2 ? arguments[2] : undefined;
-    var height = arguments.length > 3 ? arguments[3] : undefined;
-
-    if (arguments.length === 1 && !(arguments[0] instanceof HTMLElement)) {
-      options = node;
+  var Sparticles = function Sparticles(node, options, width, height) {
+    if (arguments.length >= 1 && !(arguments[0] instanceof HTMLElement)) {
+      options = arguments[0];
+      width = arguments[1];
+      height = arguments[2];
       node = undefined;
+    }
+
+    if (width && !height) {
+      height = width;
     }
 
     var defaults = {
@@ -743,36 +743,51 @@ var Sparticles = (function () {
     };
     this.el = node || document.body;
     this.settings = _objectSpread2({}, defaults, {}, options);
-    this.init(width, height);
-    window.addEventListener("resize", function () {
-      clearTimeout(_this.resizeTimer);
-      _this.resizeTimer = setTimeout(function () {
-        _this.setCanvasSize();
-
-        _this.createSparticles();
-      }, 200);
-    });
-    return this;
+    this.resizable = !width && !height;
+    this.width = this.resizable ? this.el.clientWidth : width;
+    this.height = this.resizable ? this.el.clientHeight : height;
+    return this.init();
   };
   /**
    * initialise the sparticles instance
-   * @param {Number} width - the width of the canvas if not fluid
-   * @param {Number} height - the height of the canvas if not fluid
+   * @returns {Object} - reference to the Sparticles instance
    */
 
 
-  Sparticles.prototype.init = function (width, height) {
-    var _this2 = this;
+  Sparticles.prototype.init = function () {
+    var _this = this;
 
     this.sparticles = [];
     this.createColorArray();
     this.createShapeArray();
-    this.setupMainCanvas(width, height);
+    this.setupMainCanvas();
     this.setupOffscreenCanvasses(function () {
-      _this2.createSparticles();
+      _this.createSparticles();
 
-      _this2.start();
+      _this.start();
     });
+    window.addEventListener("resize", this);
+    return this;
+  };
+  /**
+   * debounce a canvas resize and reset the particles
+   */
+
+
+  Sparticles.prototype.handleEvent = function (event) {
+    var _this2 = this;
+
+    if (event.type === "resize") {
+      clearTimeout(this.resizeTimer);
+      this.resizeTimer = setTimeout(function () {
+        if (_this2.resizable) {
+          _this2.width = _this2.el.clientWidth;
+          _this2.height = _this2.el.clientHeight;
+
+          _this2.setCanvasSize().resetSparticles();
+        }
+      }, 200);
+    }
   };
   /**
    * start/resume the sparticles animation
@@ -807,7 +822,9 @@ var Sparticles = (function () {
     // stop the rendering and updating
     this.stop(); // remove the canvas element from the DOM
 
-    this.el.removeChild(this.canvas); // delete all the properties from the instance
+    this.el.removeChild(this.canvas); // remove the resize event for this instance
+
+    window.removeEventListener("resize", this); // delete all the properties from the instance
     // to free up memory
 
     for (var prop in this) {
@@ -817,30 +834,23 @@ var Sparticles = (function () {
     }
   };
   /**
-   * set the canvas height and width based on either the input
-   * dom element, or the given width and height.
-   * @param {Number} width - the width of the canvas if not fluid
-   * @param {Number} height - the height of the canvas if not fluid
-   * @returns {HTMLCanvasElement} - the canvas element of the instance
+   * set the canvas width and height
+   * @param {Number} width - the width of the canvas
+   * @param {Number} height - the height of the canvas
+   * @returns {Object} - the Sparticle instance (for chaining)
    */
 
 
   Sparticles.prototype.setCanvasSize = function (width, height) {
-    if (typeof this.resizable === "undefined") {
-      this.resizable = !width && !height;
+    if (width) {
+      this.resizable = false;
     }
 
-    if (this.resizable) {
-      this.width = this.el.clientWidth;
-      this.height = this.el.clientHeight;
-    } else {
-      this.width = width;
-      this.height = height;
-    }
-
+    this.width = width || this.width;
+    this.height = height || this.height;
     this.canvas.width = this.width;
     this.canvas.height = this.height;
-    return this.canvas;
+    return this;
   };
   /**
    * convert the input color to an array if it isn't already
@@ -884,17 +894,15 @@ var Sparticles = (function () {
   /**
    * set up the canvas and bind to a property for
    * access later on, append it to the DOM
-   * @param {Number} width - the width of the canvas if not fluid
-   * @param {Number} height - the height of the canvas if not fluid
    * @returns {HTMLCanvasElement} - the canvas element which was appended to DOM
    */
 
 
-  Sparticles.prototype.setupMainCanvas = function (width, height) {
+  Sparticles.prototype.setupMainCanvas = function () {
     this.canvas = document.createElement("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.ctx.globalCompositeOperation = this.settings.composition;
-    this.setCanvasSize(width, height);
+    this.setCanvasSize();
     this.el.appendChild(this.canvas);
     return this.canvas;
   };
@@ -1313,7 +1321,7 @@ var Sparticles = (function () {
    */
 
 
-  Sparticles.prototype.createSparticles = function () {
+  Sparticles.prototype.resetSparticles = Sparticles.prototype.createSparticles = function () {
     this.sparticles = [];
 
     for (var i = 0; i < this.settings.count; i++) {
