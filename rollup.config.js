@@ -12,6 +12,8 @@ const banner = () => `/**!
  * @version ${pkg.version}
  * @license ${pkg.license}
  * @author ${pkg.author}
+ * @website ${pkg.homepage}
+ * @repository ${pkg.repository}
  */
 `;
 

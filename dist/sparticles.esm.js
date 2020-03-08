@@ -1,8 +1,10 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.11.1
+ * @version 0.11.2
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
+ * @website http://sparticlesjs.dev
+ * @repository https://github.com/simeydotme/sparticles.git
  */
 
 function _defineProperty(obj, key, value) {
@@ -234,7 +236,6 @@ Sparticle.prototype.setup = function () {
   this.dy = this.getDeltaY();
   this.dd = this.getDriftDelta();
   this.dr = this.getRotationDelta();
-  this.alpha = random(_.minAlpha, _.maxAlpha);
   this.shape = this.getShapeOrImage();
   this.style = this.getStyle();
   this.color = this.getColor();
@@ -248,6 +249,8 @@ Sparticle.prototype.setup = function () {
 
 
 Sparticle.prototype.init = function () {
+  var _ = this.settings;
+  this.alpha = _.speed === 0 && _.alphaSpeed > 0 ? 0 : random(_.minAlpha, _.maxAlpha);
   this.initPosition();
 };
 
@@ -256,17 +259,8 @@ Sparticle.prototype.initPosition = function () {
   var canvas = this.canvas;
 
   if (_.bounce) {
-    if (_.speed === 0) {
-      if (_.alphaSpeed > 0) {
-        this.alpha = 0;
-      }
-
-      this.px = canvas.width / 2 - this.size / 2;
-      this.py = canvas.height / 2 - this.size / 2;
-    } else {
-      this.px = round(random(2, canvas.width - this.size - 2));
-      this.py = round(random(2, canvas.height - this.size - 2));
-    }
+    this.px = round(random(2, canvas.width - this.size - 2));
+    this.py = round(random(2, canvas.height - this.size - 2));
   } else {
     this.px = round(random(-this.size * 2, canvas.width + this.size));
     this.py = round(random(-this.size * 2, canvas.height + this.size));
@@ -478,7 +472,7 @@ Sparticle.prototype.getDriftDelta = function () {
 };
 /**
  * return a random rotation value either positive or negative
- * @returns {Number} - the drift value
+ * @returns {Number} - the rotation value
  */
 
 
@@ -641,7 +635,12 @@ Sparticle.prototype.updateDrift = function () {
 };
 
 Sparticle.prototype.render = function (canvasses) {
-  var offscreenCanvas = canvasses[this.color][this.shape][this.style];
+  var offscreenCanvas = canvasses[this.color][this.shape];
+
+  if (this.settings.shape[0] !== "image") {
+    offscreenCanvas = canvasses[this.color][this.shape][this.style];
+  }
+
   var canvasSize = offscreenCanvas.width;
   var scale = this.size / canvasSize;
   var px = this.px / scale;
@@ -694,7 +693,7 @@ Sparticle.prototype.renderRotate = function () {
  * @param {Number} [options.drift=1] - the "driftiness" of particles which have a horizontal/vertical direction
  * @param {Number} [options.glow=0] - the glow effect size of each particle
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
- * @param {(String|String[])} [options.color=white] - css color as string, or array of color strings (can also be "rainbow")
+ * @param {(String|String[])} [options.color=rainbow] - css color as string, or array of color strings (can also be "rainbow")
  * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
  * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
  * @param {Number} [width] - the width of the canvas element
@@ -718,7 +717,7 @@ var Sparticles = function Sparticles(node) {
     alphaSpeed: 10,
     alphaVariance: 1,
     bounce: false,
-    color: "white",
+    color: "rainbow",
     composition: "source-over",
     count: 50,
     direction: 180,
@@ -1260,12 +1259,10 @@ Sparticles.prototype.loadAndDrawImages = function (color, callback) {
   var imagesLoaded = 0;
   this.images = [];
   imageUrls.forEach(function (imageUrl, i) {
-    var imgName = "image" + i;
+    _this4.images.push("image" + i);
 
-    _this4.images.push(imgName);
-
-    _this4.canvasses[color][imgName] = document.createElement("canvas");
-    var canvas = _this4.canvasses[color][imgName];
+    _this4.canvasses[color]["image" + i] = document.createElement("canvas");
+    var canvas = _this4.canvasses[color]["image" + i];
     var ctx = canvas.getContext("2d");
     var image = new Image();
 
@@ -1335,28 +1332,10 @@ Sparticles.prototype.createSparticles = function () {
 
 Sparticles.prototype.drawFrame = function () {
   this.ctx.clearRect(0, 0, this.width, this.height);
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
 
-  try {
-    for (var _iterator = this.sparticles[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var sparticle = _step.value;
-      sparticle.update().render(this.canvasses);
-    }
-  } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion && _iterator.return != null) {
-        _iterator.return();
-      }
-    } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
-      }
-    }
+  for (var i = 0; i < this.sparticles.length; i++) {
+    var sparticle = this.sparticles[i];
+    sparticle.update().render(this.canvasses);
   }
 
   return this.sparticles;

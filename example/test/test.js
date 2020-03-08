@@ -4,44 +4,44 @@ let colorType = {
 };
 
 let colors = {
-  color1: "rgba(255,255,255,1)",
+  color1: "hsl(10,70%,50%)",
   color2: "rgba(252,248,230,1)",
   color3: "rgba(255,227,241,1)",
   color4: "rgba(230,248,255,1)"
 };
 
 let options = {
-  // alphaSpeed: 0,
-  // alphaVariance: 1,
-  // color: [colors.color1, colors.color2, colors.color3, colors.color4],
-  // composition: "source-over",
-  // bounce: true,
-  // count: 100,
-  // direction: 180,
-  // drift: 0,
-  // glow: 0,
-  // imageUrl: [
-  //   "./snowflake.png",
-  //   "https://image.flaticon.com/icons/svg/23/23858.svg",
-  //   "https://image.flaticon.com/icons/svg/23/23883.svg",
-  //   "https://image.flaticon.com/icons/svg/23/23889.svg",
-  //   "https://image.flaticon.com/icons/svg/24/24296.svg",
-  //   "https://image.flaticon.com/icons/svg/23/23901.svg",
-  //   "https://image.flaticon.com/icons/svg/24/24286.svg"
-  // ],
-  // maxAlpha: 1,
-  // maxSize: 10,
-  // minAlpha: 0,
-  // minSize: 10,
-  // parallax: 0,
-  // rotate: true,
-  // rotation: 0,
-  // shape: "star",
-  // speed: 0,
-  // style: "fill",
-  // twinkle: false,
-  // xVariance: 5,
-  // yVariance: 5,
+  alphaSpeed: 0,
+  alphaVariance: 1,
+  color: [colors.color1, colors.color2, colors.color3, colors.color4],
+  composition: "source-over",
+  bounce: true,
+  count: 100,
+  direction: 180,
+  drift: 0,
+  glow: 0,
+  imageUrl: [
+    "./snowflake.png",
+    "https://image.flaticon.com/icons/svg/23/23858.svg",
+    "https://image.flaticon.com/icons/svg/23/23883.svg",
+    "https://image.flaticon.com/icons/svg/23/23889.svg",
+    "https://image.flaticon.com/icons/svg/24/24296.svg",
+    "https://image.flaticon.com/icons/svg/23/23901.svg",
+    "https://image.flaticon.com/icons/svg/24/24286.svg"
+  ],
+  maxAlpha: 1,
+  maxSize: 10,
+  minAlpha: 0,
+  minSize: 10,
+  parallax: 0,
+  rotate: true,
+  rotation: 0,
+  shape: "star",
+  speed: 0,
+  style: "fill",
+  twinkle: false,
+  xVariance: 5,
+  yVariance: 5,
 };
 
 window.onload = function() {

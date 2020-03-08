@@ -18,8 +18,6 @@ to [import the module in to your application](#bundler) for a morer modern appro
 
 # usage
 
-# styling
-
 # options
 
 A brief look at all the options, with more details below.
@@ -46,7 +44,7 @@ option                             | type              | default         | descr
 **[drift](#drift)**                 | `Number`          | `1`             | the "driftiness" of particles which have a horizontal/vertical direction
 **[glow](#glow)**                   | `Number`          | `0`             | the glow effect size of each particle
 **[twinkle](#twinkle)**             | `Boolean`         | `false`         | particles to exhibit an alternative alpha transition as "twinkling"
-**[color](#color)**                 | `String`/`Array`  | `white`         | css color as string, or array of color strings (can also be "rainbow")
+**[color](#color)**                 | `String`/`Array`  | `rainbow`       | css color as string, or array of color strings (can also be "rainbow")
 **[shape](#shape)**                 | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
 **[imageUrl](#imageUrl)**           | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, should be square (1:1 ratio))
 
@@ -167,21 +165,89 @@ on the canvas, this could be useful in some scenarios where the particle should 
 Must be higher than the `minAlpha` value.
 
 ## `minSize`
+- Type: `Number`
+- Default: `1`
+- Range: `1 - 100`
+
+Minimum size (in pixels) of the particles. The actual size of each particle is variable between the `minSize`
+and `maxSize`. If the `minSize` and `maxSize` are the same value; then all particles will be uniformly sized.
 
 ## `maxSize`
+- Type: `Number`
+- Default: `10`
+- Range: `1 - 100`
+
+Maximum size (in pixels) of the particles. The actual size of each particle is variable between the `minSize`
+and `maxSize`. If the `minSize` and `maxSize` are the same value; then all particles will be uniformly sized.
 
 ## `style`
+- Type: `String`
+- Default: `"fill"`
+- Values: `"fill"`, `"stroke"` or `"both"`
+
+Particles can be either stroked (outline) or filled (solid) and this setting determines that style. It's
+also possible to randomize the style by choosing `"both"`
 
 ## `bounce`
+- Type: `Boolean`
+- Default: `false`
+
+Determine if particles should bounce off the boundaries of the canvas instead of resetting to the opposite side.
+This is best used with `speed: 0;` and a high value for `[x/yVariance]` to create a chaotic effect.
 
 ## `drift`
+- Type: `Number`
+- Default: `1`
+- Range: `1 - 20`
+
+How much a particle will "drift" as it falls. This is to imply a floatiness/wind effect like seen with snow flakes,
+or leaves. The `drift` will only apply if `speed > 0` and `direction` is near to a 90degree value (`0, 90, 180, 270`)
 
 ## `glow`
+- Type: `Number`
+- Default: `0`
+- Range: `0 - 50`
+
+Glow (or shadow) effect around the particle. This will not affect images.
 
 ## `twinkle`
+- Type: `Boolean`
+- Default: `false`
+
+Apply a "twinkle" effect to the particle when changing alpha. This works best with a higher `alphaSpeed` and 
+`alphaVariance` value.
 
 ## `color`
+- Type: `String` / `Array<String>`
+- Default: `"rainbow"`
+- Values: any valid css/html color string
+
+A CSS/HTML color string to apply across all particles.  
+If an array of colors (`[ "#ff0", "red", "hsl(10,50%,50%)" ]`) is given, then each particle will 
+be assigned a random color from the array. Additionally `"rainbow"` can be used to assign any random color.
 
 ## `shape`
+- Type: `String` / `Array<String>`
+- Default: `"circle"`
+- Values: `"circle"`, `"square"`, `"triangle"`, `"line"`, `"diamond"`, `"star"` or `"image"`
+
+Determine the shape of all the particles.  
+If an array of shapes (`[ "circle", "star", "diamond" ]`) is given, then each particle will
+be assigned a random shape form the array. Additionally `"image"` can be used to define a custom
+particle shape from an image.
 
 ## `imageUrl`
+- Type: `String` / `Array<String>`
+- Default: `""`
+- Values: a valid url, or data-uri
+
+Determine the custom image to be used for all the particles.
+If an array of urls (`[ "http://my.image/shape.png", "http://my.svg/shape.svg" ]`) is given, then each particle
+will be assigned a random image as it's shape from the array.
+
+This only applies if the `shape` is set to `"image"`.
+
+
+
+
+# styling
