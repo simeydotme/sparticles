@@ -250,7 +250,7 @@ Sparticle.prototype.getDriftDelta = function() {
 
 /**
  * return a random rotation value either positive or negative
- * @returns {Number} - the drift value
+ * @returns {Number} - the rotation value
  */
 Sparticle.prototype.getRotationDelta = function() {
   let r = 0;
@@ -403,7 +403,10 @@ Sparticle.prototype.updateDrift = function() {
 };
 
 Sparticle.prototype.render = function(canvasses) {
-  const offscreenCanvas = canvasses[this.color][this.shape][this.style];
+  let offscreenCanvas = canvasses[this.color][this.shape];
+  if (this.settings.shape[0] !== "image") {
+    offscreenCanvas = canvasses[this.color][this.shape][this.style];
+  }
   const canvasSize = offscreenCanvas.width;
   const scale = this.size / canvasSize;
   const px = this.px / scale;

@@ -27,7 +27,7 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {Number} [options.drift=1] - the "driftiness" of particles which have a horizontal/vertical direction
  * @param {Number} [options.glow=0] - the glow effect size of each particle
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
- * @param {(String|String[])} [options.color=white] - css color as string, or array of color strings (can also be "rainbow")
+ * @param {(String|String[])} [options.color=rainbow] - css color as string, or array of color strings (can also be "rainbow")
  * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
  * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
  * @param {Number} [width] - the width of the canvas element
@@ -43,7 +43,7 @@ const Sparticles = function(node, options = {}, width, height) {
     alphaSpeed: 10,
     alphaVariance: 1,
     bounce: false,
-    color: "white",
+    color: "rainbow",
     composition: "source-over",
     count: 50,
     direction: 180,
@@ -574,10 +574,9 @@ Sparticles.prototype.loadAndDrawImages = function(color, callback) {
   this.images = [];
 
   imageUrls.forEach((imageUrl, i) => {
-    const imgName = "image" + i;
-    this.images.push(imgName);
-    this.canvasses[color][imgName] = document.createElement("canvas");
-    const canvas = this.canvasses[color][imgName];
+    this.images.push("image" + i);
+    this.canvasses[color]["image" + i] = document.createElement("canvas");
+    const canvas = this.canvasses[color]["image" + i];
     const ctx = canvas.getContext("2d");
     const image = new Image();
 
@@ -640,7 +639,8 @@ Sparticles.prototype.createSparticles = function() {
  */
 Sparticles.prototype.drawFrame = function() {
   this.ctx.clearRect(0, 0, this.width, this.height);
-  for (const sparticle of this.sparticles) {
+  for (let i = 0; i < this.sparticles.length; i++) {
+    let sparticle = this.sparticles[i];
     sparticle.update().render(this.canvasses);
   }
   return this.sparticles;
