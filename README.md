@@ -6,7 +6,7 @@ Designed for those occasions when you ***just have to have*** sparkles, snow, or
 
 Depending on how your project looks, you may want to [include a direct link to the script](#vanilla) and 
 then initialise the sparkles _(for example [on a wordpress site, or inside a CMS](#jquery))_ or you may want
-to [import the module in to your application](#bundler) for a morer modern approach.
+to [import the module in to your application](#bundler) for a more modern approach.
 
 ## vanilla
 
@@ -18,12 +18,45 @@ to [import the module in to your application](#bundler) for a morer modern appro
 
 # usage
 
+Providing that the script/module has been properly included, then it can be initialised
+by running the `Sparticles()` constructor;
+```js
+var mySparticles = new Sparticles();
+```
+
+# parameters
+
+When initialising the Sparticles instance there are some parameters that can be supplied.
+
+```js
+// supply no parameters and get a default Sparticle instance on the <body>
+var mySparticles = new Sparticles();
+
+// supply a single HTMLElement parameter for a default Sparticle instance on that element
+var mySparticles = new Sparticles(document.getElementById("myDiv"));
+
+// supply a single Object parameter to apply a custom Sparticle instance on the <body>
+var mySparticles = new Sparticles({ color: "red" });
+
+// supply the width and height parameters 
+var mySparticles = new Sparticles({ color: "red" }, 400, 300);
+```
+
+parameter                   | type               | default            | description
+----------------------------|--------------------|--------------------|-----------------------------------------------------------
+**node**                    | `HTMLElement`      | `document.body`    | the element in the DOM which the Sparticles will append to
+**[options](#options)**     | `Object`           | `{}`               | an object with [all the options for the instance](#options)
+**width**                   | `Number`           | `node.clientWidth` | the width of the canvas element
+**height**                  | `Number`           | `node.clientWidth` | the height of the canvas element (defaults to width)
+
+Leave the `width`/`height` properties empty to make the canvas size to it's `node`
+
 # options
 
 A brief look at all the options, with more details below.
 
 option                             | type              | default         | description
-|----------------------------------|-------------------|-----------------|-----------------------------------------------------|
+-----------------------------------|-------------------|-----------------|-----------------------------------------------------
 **[composition](#composition)**     | `String`          | `source-over`   | canvas globalCompositeOperation value for particles
 **[count](#count)**                 | `Number`          | `50`            | number of particles on the canvas simultaneously
 **[speed](#speed)**                 | `Number`          | `10`            | default velocity of every particle
@@ -233,8 +266,8 @@ be assigned a random color from the array. Additionally `"rainbow"` can be used 
 
 Determine the shape of all the particles.  
 If an array of shapes (`[ "circle", "star", "diamond" ]`) is given, then each particle will
-be assigned a random shape form the array. Additionally `"image"` can be used to define a custom
-particle shape from an image.
+be assigned a random shape form the array. Additionally `"image"` can be used to [define a custom
+particle shape from an image when combined with `imageUrl`](#imageUrl).
 
 ## `imageUrl`
 - Type: `String` / `Array<String>`
@@ -245,9 +278,16 @@ Determine the custom image to be used for all the particles.
 If an array of urls (`[ "http://my.image/shape.png", "http://my.svg/shape.svg" ]`) is given, then each particle
 will be assigned a random image as it's shape from the array.
 
-This only applies if the `shape` is set to `"image"`.
+This only applies [if the `shape` is set to `"image"`](#shape).
 
 
+# methods
+
+method                                                   | description
+---------------------------------------------------------|------------------------------------------------------
+**[destroy()](#destroy)**                                | destroy the Sparticles instance and remove event listeners
+**[setCanvasSize( width, height )](#setCanvasSize)**     | set the new size of the canvas
+**[resetSparticles()](#resetSparticles)**                | reset all the particles on the canvas
 
 
 # styling
