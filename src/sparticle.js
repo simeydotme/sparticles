@@ -35,7 +35,6 @@ Sparticle.prototype.setup = function() {
   this.dy = this.getDeltaY();
   this.dd = this.getDriftDelta();
   this.dr = this.getRotationDelta();
-  this.alpha = random(_.minAlpha, _.maxAlpha);
   this.shape = this.getShapeOrImage();
   this.style = this.getStyle();
   this.color = this.getColor();
@@ -48,6 +47,8 @@ Sparticle.prototype.setup = function() {
  * these values do not change when the particle goes offscreen
  */
 Sparticle.prototype.init = function() {
+  const _ = this.settings;
+  this.alpha = _.speed === 0 && _.alphaSpeed > 0 ? 0 : random(_.minAlpha, _.maxAlpha);
   this.initPosition();
 };
 
@@ -55,16 +56,8 @@ Sparticle.prototype.initPosition = function() {
   const _ = this.settings;
   const canvas = this.canvas;
   if (_.bounce) {
-    if (_.speed === 0) {
-      if (_.alphaSpeed > 0) {
-        this.alpha = 0;
-      }
-      this.px = canvas.width / 2 - this.size / 2;
-      this.py = canvas.height / 2 - this.size / 2;
-    } else {
-      this.px = round(random(2, canvas.width - this.size - 2));
-      this.py = round(random(2, canvas.height - this.size - 2));
-    }
+    this.px = round(random(2, canvas.width - this.size - 2));
+    this.py = round(random(2, canvas.height - this.size - 2));
   } else {
     this.px = round(random(-this.size * 2, canvas.width + this.size));
     this.py = round(random(-this.size * 2, canvas.height + this.size));
