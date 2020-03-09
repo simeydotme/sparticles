@@ -1,0 +1,44 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  color: rgb(237, 231, 255);
+  background: rgb(33, 32, 39);
+  padding: 10px;
+  margin: 0;
+  height: 100%;
+}
+
+nav {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+}
+
+nav ul {
+  list-style: none;
+}
+
+nav li {
+  margin: 0 10px 0 -2px;
+  padding: 0 10px 0 0;
+  display: inline-block;
+}
+
+nav li:not(:last-child) {
+  border-right: 1px solid white;
+}
+
+nav a {
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+  display: inline-block;
+}
+
+nav a.current,
+nav a:hover,
+nav a:active,
+nav a:focus {
+  color: white;
+}
