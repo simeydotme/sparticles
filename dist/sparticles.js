@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.12.0
+ * @version 0.13.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -697,6 +697,7 @@ var Sparticles = (function () {
    * @param {Number} [options.glow=0] - the glow effect size of each particle
    * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
    * @param {(String|String[])} [options.color=rainbow] - css color as string, or array of color strings (can also be "rainbow")
+   * @param {Function} [options.rainbowColor=randomHsl(index,total)] - a custom function for setting the rainbow colors when color="rainbow"
    * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
    * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
    * @param {Number} [width] - the width of the canvas element
@@ -721,6 +722,7 @@ var Sparticles = (function () {
       alphaVariance: 1,
       bounce: false,
       color: "rainbow",
+      rainbowColor: randomHsl,
       composition: "source-over",
       count: 50,
       direction: 180,
@@ -861,11 +863,12 @@ var Sparticles = (function () {
   Sparticles.prototype.createColorArray = function () {
     if (!Array.isArray(this.settings.color)) {
       if (this.settings.color === "rainbow") {
-        var colors = 100;
+        // it would be silly to have an array of too many colours.
+        var colors = this.settings.count > 100 ? 100 : this.settings.count;
         this.settings.color = [];
 
         for (var i = 0; i < colors; i++) {
-          this.settings.color[i] = randomHsl();
+          this.settings.color[i] = this.settings.rainbowColor(i, colors);
         }
       } else {
         this.settings.color = [this.settings.color];
