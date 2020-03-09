@@ -1,20 +1,100 @@
 # Sparticles
 **Lightweight, _High Performance_ Particles in Canvas.**  
-Designed for those occasions when you ***just have to have*** sparkles, snow, or stars on your homepage.
+Designed for those occasions when you ***✨ just ✨ have ✨ to ✨ have ✨*** sparkles, 
+snow, or stars on your fantastic homepage!
+
+![Image of little coloured stars known as "Sparticles" running at 120fps](example/example.png)
 
 # installation
 
-Depending on how your project looks, you may want to [include a direct link to the script](#vanilla) and 
-then initialise the sparkles _(for example [on a wordpress site, or inside a CMS](#jquery))_ or you may want
+Depending on how your project looks, 
+- you may want to [include a direct link to the script](#vanilla) and 
+then initialise the sparkles,
+- or you may want
 to [import the module in to your application](#bundler) for a more modern approach.
 
 ## vanilla
 
+1. firstly make sure you've downloaded [the latest version of the script](https://github.com/simeydotme/sparticles/releases) 
+to your application directory _(if you are running on a CMS you might also 
+need to upload the file to your server)_. The file you'll want to use is; `dist/sparticles.min.js` 
+to make sure it downloads the fastest for your users.
+
+2. After you've downloaded, or uploaded, the `sparticles.min.js` file to the 
+correct place, you'll then need to include it in your web page;
+
+```html
+<script src="../path/to/sparticles.min.js"></script>
+```
+
+3. And finally, you should then be able to initialise the sparticles by 
+running this code in your javascript; <sup>_(make sure this code runs _after_ 
+you've included the script above.)_</sup>
+
+```html
+<script>
+  window.onload = function() {
+    var myElement = document.getElementById("myDiv");
+    var mySparticles = new Sparticles(myElement, { speed: 10 }, 400);
+  }
+</script>
+```
+
 ## jquery
 
-## bundler
+For jQuery sites, you may follow all of the steps above, but replace 
+the third step with something like below;
 
-### example with rollup/svelte
+```html
+<script>
+  var $el = $("#myDiv");
+  var mySparticles = new Sparticles($el[0], { speed: 10 }, 400);
+</script>
+```
+
+## app / bundler
+
+If you're running a more modern type of application with something like Svelte or VueJs; 
+
+1. First you will want to install the module with NPM;
+
+```bash
+yarn add sparticles
+# or npm, if you prefer
+```
+
+2. Then import the module in to the app where you want to use it
+
+```js
+import Sparticles from "sparticles";
+```
+
+3. Finally initialise with vanillaJS
+
+```js
+new Sparticles(node, { speed: 10 }, 400);
+```
+
+4. If you're using SvelteJS specifically, then your single-file component
+would look a little like this;
+
+```html
+<script>
+
+  import Sparticles from "sparticles";
+
+  let sparticles,
+      options = { color: "gold", shape: "star", speed: 50 };
+
+  function addSparticles(node) {
+    new Sparticles(node, options, 400);
+  }
+
+</script>
+
+<main use:addSparticles>
+</main>
+```
 
 # usage
 
@@ -28,20 +108,6 @@ var mySparticles = new Sparticles();
 
 When initialising the Sparticles instance there are some parameters that can be supplied.
 
-```js
-// supply no parameters and get a default Sparticle instance on the <body>
-var mySparticles = new Sparticles();
-
-// supply a single HTMLElement parameter for a default Sparticle instance on that element
-var mySparticles = new Sparticles(document.getElementById("myDiv"));
-
-// supply a single Object parameter to apply a custom Sparticle instance on the <body>
-var mySparticles = new Sparticles({ color: "red" });
-
-// supply the width and height parameters 
-var mySparticles = new Sparticles({ color: "red" }, 400, 300);
-```
-
 parameter                   | type               | default            | description
 ----------------------------|--------------------|--------------------|-----------------------------------------------------------
 **node**                    | `HTMLElement`      | `document.body`    | the element in the DOM which the Sparticles will append to
@@ -49,14 +115,36 @@ parameter                   | type               | default            | descript
 **width**                   | `Number`           | `node.clientWidth` | the width of the canvas element
 **height**                  | `Number`           | `node.clientWidth` | the height of the canvas element (defaults to width)
 
-Leave the `width`/`height` properties empty to make the canvas size to it's `node`
+<sup>Leave the `width`/`height` properties empty to make the canvas resize to fit it's `node`</sup>
+
+---
+
+- Supply nothing and get a default Sparticle instance on the `<body>`
+```js
+var mySparticles = new Sparticles();
+```
+
+- Supply a single HTMLElement parameter for a default Sparticle instance on that element
+```js
+var mySparticles = new Sparticles(document.getElementById("myDiv"));
+```
+
+- Supply a single `Object` parameter to customise a Sparticle instance on the `<body>`
+```js
+var mySparticles = new Sparticles({ color: "red" });
+```
+
+- Supply the width and height parameters for a custom size
+```js
+var mySparticles = new Sparticles({ color: "red" }, 400, 300);
+```
 
 # options
 
 A brief look at all the options, with more details below.
 
-option                             | type              | default         | description
------------------------------------|-------------------|-----------------|-----------------------------------------------------
+option                              | type              | default         | description
+------------------------------------|-------------------|-----------------|-----------------------------------------------------
 **[composition](#composition)**     | `String`          | `source-over`   | canvas globalCompositeOperation value for particles
 **[count](#count)**                 | `Number`          | `50`            | number of particles on the canvas simultaneously
 **[speed](#speed)**                 | `Number`          | `10`            | default velocity of every particle
@@ -78,6 +166,7 @@ option                             | type              | default         | descr
 **[glow](#glow)**                   | `Number`          | `0`             | the glow effect size of each particle
 **[twinkle](#twinkle)**             | `Boolean`         | `false`         | particles to exhibit an alternative alpha transition as "twinkling"
 **[color](#color)**                 | `String`/`Array`  | `rainbow`       | css color as string, or array of color strings (can also be "rainbow")
+**[rainbowColor](#rainbowColor)**   | `Function`        | `randomHsl`     | function for returning a random/rainbow color when the color is set as "rainbow"
 **[shape](#shape)**                 | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
 **[imageUrl](#imageUrl)**           | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, should be square (1:1 ratio))
 
@@ -258,6 +347,24 @@ Apply a "twinkle" effect to the particle when changing alpha. This works best wi
 A CSS/HTML color string to apply across all particles.  
 If an array of colors (`[ "#ff0", "red", "hsl(10,50%,50%)" ]`) is given, then each particle will 
 be assigned a random color from the array. Additionally `"rainbow"` can be used to assign any random color.
+
+## `rainbowColor`
+- Type: `Function`
+- Default: [`randomHSL()`](https://github.com/simeydotme/sparticles/blob/9a132505c19268a70ec31766119d29cb9bddd0b2/src/helpers.js#L55-L64)
+- Arguments: `index`, `total`
+
+Custom function to use when generating "`rainbow`" colors. The default function will return a fairly
+pleasant `hsl()` color with a high saturation and medium lightness. This can be overridden to suit
+your environment better. The two arguments (`index`, `total`) are `Integer`s and allow for a little
+psuedo-randomizing.
+
+**example:**
+
+```js
+rainbowColor: function( index, total ) {
+	return `hsl( ${index}, 80%, ${total - index}% )`;
+}
+```
 
 ## `shape`
 - Type: `String` / `Array<String>`

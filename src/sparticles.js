@@ -28,6 +28,7 @@ import { clamp, randomHsl } from "./helpers.js";
  * @param {Number} [options.glow=0] - the glow effect size of each particle
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
  * @param {(String|String[])} [options.color=rainbow] - css color as string, or array of color strings (can also be "rainbow")
+ * @param {Function} [options.rainbowColor=randomHsl(index,total)] - a custom function for setting the rainbow colors when color="rainbow"
  * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
  * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
  * @param {Number} [width] - the width of the canvas element
@@ -49,6 +50,7 @@ const Sparticles = function(node, options, width, height) {
     alphaVariance: 1,
     bounce: false,
     color: "rainbow",
+    rainbowColor: randomHsl,
     composition: "source-over",
     count: 50,
     direction: 180,
@@ -173,10 +175,11 @@ Sparticles.prototype.setCanvasSize = function(width, height) {
 Sparticles.prototype.createColorArray = function() {
   if (!Array.isArray(this.settings.color)) {
     if (this.settings.color === "rainbow") {
-      const colors = 100;
+      // it would be silly to have an array of too many colours.
+      const colors = this.settings.count > 100 ? 100 : this.settings.count;
       this.settings.color = [];
       for (let i = 0; i < colors; i++) {
-        this.settings.color[i] = randomHsl();
+        this.settings.color[i] = this.settings.rainbowColor(i, colors);
       }
     } else {
       this.settings.color = [this.settings.color];

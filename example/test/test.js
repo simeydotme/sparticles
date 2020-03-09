@@ -4,7 +4,7 @@ let colorType = {
 };
 
 let colors = {
-  color1: "hsl(10,70%,50%)",
+  color1: "rgba(242,210,65,1)",
   color2: "rgba(252,248,230,1)",
   color3: "rgba(255,227,241,1)",
   color4: "rgba(230,248,255,1)"
