@@ -1063,10 +1063,10 @@ sourcemap-codec@^1.4.4:
   resolved "https://registry.yarnpkg.com/sourcemap-codec/-/sourcemap-codec-1.4.8.tgz#ea804bd94857402e6992d05a38ef1ae35a9ab4c4"
   integrity sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==
 
-sparticles@^0.12.0:
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/sparticles/-/sparticles-0.12.0.tgz#27a872a8afb14d16c68255c24c0d377212a48df7"
-  integrity sha512-gwVT20PCsSd9M/h2RC4kukFgl3SuuYdjERZYumZXlj715V5UVTC1hiQaC/ipvU+M8juP4/ENcsNC8ip0oJSxbQ==
+sparticles@^0.13.0:
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/sparticles/-/sparticles-0.13.0.tgz#5da68cbfebe170f180d7e2c8262e93865cb5891c"
+  integrity sha512-vvQ16CRMD23boB8NWouRDOSuJ9CAiDllwzZYldCfqSlRXyRlsXPpqWQXdoVGRtxhUi3xCgXcrxTMWjiNEhh60A==
 
 split-string@^3.0.1, split-string@^3.0.2:
   version "3.1.0"
