@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.13.0
+ * @version 0.13.1
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -253,13 +253,12 @@ var Sparticles = (function () {
 
   Sparticle.prototype.init = function () {
     var _ = this.settings;
-    this.alpha = _.speed === 0 && _.alphaSpeed > 0 ? 0 : random(_.minAlpha, _.maxAlpha);
-    this.initPosition();
-  };
-
-  Sparticle.prototype.initPosition = function () {
-    var _ = this.settings;
     var canvas = this.canvas;
+    this.alpha = 0;
+
+    if (_.speed > 0 || _.alphaSpeed === 0) {
+      this.alpha = random(_.minAlpha, _.maxAlpha);
+    }
 
     if (_.bounce) {
       this.px = round(random(2, canvas.width - this.size - 2));
@@ -648,21 +647,23 @@ var Sparticles = (function () {
     var scale = this.size / canvasSize;
     var px = this.px / scale;
     var py = this.py / scale;
-    this.renderRotate();
     this.ctx.globalAlpha = clamp(this.alpha, 0, 1);
+    this.renderRotate();
+    this.renderComposition();
     this.ctx.transform(scale, 0, 0, scale, 0, 0);
-
-    if (this.ctx.globalCompositeOperation !== this.settings.composition) {
-      this.ctx.globalCompositeOperation = this.settings.composition;
-    }
-
     this.ctx.drawImage(offscreenCanvas, 0, 0, canvasSize, canvasSize, px, py, canvasSize, canvasSize);
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     return this;
   };
 
+  Sparticle.prototype.renderComposition = function () {
+    if (this.ctx.globalCompositeOperation !== this.settings.composition) {
+      this.ctx.globalCompositeOperation = this.settings.composition;
+    }
+  };
+
   Sparticle.prototype.renderRotate = function () {
-    if (this.settings.rotate) {
+    if (this.shape !== "circle" && this.settings.rotate) {
       var centerX = this.px + this.size / 2;
       var centerY = this.py + this.size / 2;
       this.ctx.translate(centerX, centerY);
