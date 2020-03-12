@@ -215,7 +215,6 @@ Sparticle.prototype.getDeltaY = function() {
 /**
  * get a random delta for the alpha change over time from
  * between a positive and negative alpha variance value
- * (but only return a negative value for twinkle effect)
  * @returns {Number} - the alpha delta to be applied to particle
  */
 Sparticle.prototype.getAlphaDelta = function() {
@@ -320,11 +319,17 @@ Sparticle.prototype.updateTwinkle = function() {
   const over = alpha > this.settings.maxAlpha;
   const under = alpha < this.settings.minAlpha;
   const tick = (delta / 1000) * this.settings.alphaSpeed * 0.5;
+  const flickerOn = roll(1 / 30);
+  const flickerOff = roll(1 / 30);
   // if the particle is resetting the twinkle effect, then
   // we simply want to quickly get back to max alpha
   // over a short period of time, otherwise just advance the tick
   if (this.resettingTwinkle) {
-    alpha += 0.02 * this.settings.alphaSpeed;
+    alpha += tick * 5;
+  } else if (flickerOn) {
+    alpha += tick * 50;
+  } else if (flickerOff) {
+    alpha -= tick * 25;
   } else {
     alpha -= tick;
   }
@@ -397,27 +402,20 @@ Sparticle.prototype.updateDrift = function() {
 };
 
 Sparticle.prototype.render = function(canvasses) {
-  let offscreenCanvas = canvasses[this.color][this.shape];
+  let particleCanvas = canvasses[this.color][this.shape];
   if (this.settings.shape[0] !== "image") {
-    offscreenCanvas = canvasses[this.color][this.shape][this.style];
+    particleCanvas = canvasses[this.color][this.shape][this.style];
   }
-  const canvasSize = offscreenCanvas.width;
+  const canvasSize = particleCanvas.width;
   const scale = this.size / canvasSize;
   const px = this.px / scale;
   const py = this.py / scale;
   this.ctx.globalAlpha = clamp(this.alpha, 0, 1);
   this.renderRotate();
-  this.renderComposition();
   this.ctx.transform(scale, 0, 0, scale, 0, 0);
-  this.ctx.drawImage(offscreenCanvas, 0, 0, canvasSize, canvasSize, px, py, canvasSize, canvasSize);
+  this.ctx.drawImage(particleCanvas, 0, 0, canvasSize, canvasSize, px, py, canvasSize, canvasSize);
   this.ctx.setTransform(1, 0, 0, 1, 0, 0);
   return this;
-};
-
-Sparticle.prototype.renderComposition = function() {
-  if (this.ctx.globalCompositeOperation !== this.settings.composition) {
-    this.ctx.globalCompositeOperation = this.settings.composition;
-  }
 };
 
 Sparticle.prototype.renderRotate = function() {

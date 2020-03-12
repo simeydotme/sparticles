@@ -36,7 +36,7 @@ let options = {
   parallax: 10,
   rotate: false,
   rotation: 0,
-  shape: "diamond",
+  shape: "random",
   speed: 0,
   style: "both",
   twinkle: true,
@@ -68,7 +68,7 @@ window.initStats = function() {
 
 window.initGui = function() {
   const s = window.mySparticles;
-  const shapes = ["circle", "square", "triangle", "diamond", "star", "line", "image"];
+  const shapes = ["random", "circle", "square", "triangle", "diamond", "star", "line", "image"];
   const styles = ["fill", "stroke", "both"];
   const colorOptions = ["single", "multi", "rainbow"];
   const composites = [

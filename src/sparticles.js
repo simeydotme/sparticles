@@ -183,6 +183,7 @@ const Sparticles = function(node, options, width, height) {
    */
   this.resetSparticles = this.createSparticles = function() {
     this.sparticles = [];
+    this.ctx.globalCompositeOperation = this.settings.composition;
     for (let i = 0; i < this.settings.count; i++) {
       this.sparticles.push(new Sparticle(this));
     }
@@ -223,7 +224,7 @@ Sparticles.prototype.createColorArray = function() {
 Sparticles.prototype.createShapeArray = function() {
   if (!Array.isArray(this.settings.shape)) {
     if (this.settings.shape === "random") {
-      this.settings.shape = ["square", "circle", "triangle", "diamond"];
+      this.settings.shape = ["square", "circle", "star", "diamond"];
     } else {
       this.settings.shape = [this.settings.shape];
     }
@@ -253,7 +254,6 @@ Sparticles.prototype.setupMainCanvas = function() {
   this.canvas = document.createElement("canvas");
   this.canvas.setAttribute("class", "sparticles");
   this.ctx = this.canvas.getContext("2d");
-  this.ctx.globalCompositeOperation = this.settings.composition;
   this.setCanvasSize();
   this.el.appendChild(this.canvas);
   return this.canvas;
