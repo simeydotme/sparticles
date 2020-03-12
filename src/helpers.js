@@ -35,7 +35,7 @@ export const radian = angle => {
  * @returns {Number} a random number between min and max
  */
 export const random = (min = 0, max = 1, value = Math.random()) => {
-  if (min === max) {
+  if (max <= min) {
     value = min;
   } else if ((min !== 0 || max !== 1) && max > min) {
     value = value * (max - min) + min;
