@@ -1,9 +1,33 @@
 # Sparticles
+
+#### https://sparticlesjs.dev
+
 **Lightweight, _High Performance_ Particles in Canvas.**  
-Designed for those occasions when you ***✨ just ✨ have ✨ to ✨ have ✨*** sparkles, 
-snow, or stars on your fantastic homepage!
+<sup>For those occasions when you ***👏 just 👏 gotta 👏 have 👏*** sparkles, 
+snow, or stars on your homepage!</sup>  
+
+
+- ℹ **It's quite easy to achieve 120fps+ with over 1,000 particles on a decent computer!**  
+
+- ⚠ _But please remember **your users are not all running super-computers** with GPUs, they 
+are **probably on a mobile phone**. Please avoid running heavy animations on phones! [If you 
+really have to then I'd advise reducing the particles down to 100](#mobile) or less for a mobile device!_
 
 ![Image of little coloured stars known as "Sparticles" running at 120fps](example/example.png)
+
+
+---
+
+- [installation](#installation)
+- [parameters](#parameters)
+- [options](#options)
+- [methods](#methods)
+- [styling](#styling)
+- [performance](#performance)
+- [why?](#why-sparticles)
+
+---
+  
 
 # installation
 
@@ -27,15 +51,15 @@ correct place, you'll then need to include it in your web page;
 <script src="../path/to/sparticles.min.js"></script>
 ```
 
-3. And finally, you should then be able to initialise the sparticles by 
-running this code in your javascript; <sup>_(make sure this code runs _after_ 
-you've included the script above.)_</sup>
+3. And finally, you should then be able to initialise the Sparticles by 
+running this code in your javascript;  
+<sup>_(make sure this code runs _after_ you've included the script above.)_</sup>
 
 ```html
 <script>
   window.onload = function() {
-    var myElement = document.getElementById("myDiv");
-    var mySparticles = new Sparticles(myElement, { speed: 10 }, 400);
+    let myElement = document.getElementById("myDiv");
+    let mySparticles = new Sparticles(myElement, { count: 100 }, 400);
   }
 </script>
 ```
@@ -47,8 +71,8 @@ the third step with something like below;
 
 ```html
 <script>
-  var $el = $("#myDiv");
-  var mySparticles = new Sparticles($el[0], { speed: 10 }, 400);
+  let $el = $("#myDiv");
+  let mySparticles = new Sparticles($el[0], { count: 100 }, 400);
 </script>
 ```
 
@@ -59,8 +83,9 @@ If you're running a more modern type of application with something like Svelte o
 1. First you will want to install the module with NPM;
 
 ```bash
-yarn add sparticles
+yarn add --dev sparticles
 # or npm, if you prefer
+npm install --save-dev sparticles
 ```
 
 2. Then import the module in to the app where you want to use it
@@ -72,7 +97,7 @@ import Sparticles from "sparticles";
 3. Finally initialise with vanillaJS
 
 ```js
-new Sparticles(node, { speed: 10 }, 400);
+new Sparticles(node, { count: 100 }, 400);
 ```
 
 4. If you're using SvelteJS specifically, then your single-file component
@@ -101,7 +126,7 @@ would look a little like this;
 Providing that the script/module has been properly included, then it can be initialised
 by running the `Sparticles()` constructor;
 ```js
-var mySparticles = new Sparticles();
+let mySparticles = new Sparticles();
 ```
 
 # parameters
@@ -121,22 +146,22 @@ parameter                   | type               | default            | descript
 
 - Supply nothing and get a default Sparticle instance on the `<body>`
 ```js
-var mySparticles = new Sparticles();
+let mySparticles = new Sparticles();
 ```
 
 - Supply a single HTMLElement parameter for a default Sparticle instance on that element
 ```js
-var mySparticles = new Sparticles(document.getElementById("myDiv"));
+let mySparticles = new Sparticles(document.getElementById("myDiv"));
 ```
 
 - Supply a single `Object` parameter to customise a Sparticle instance on the `<body>`
 ```js
-var mySparticles = new Sparticles({ color: "red" });
+let mySparticles = new Sparticles({ color: "red" });
 ```
 
 - Supply the width and height parameters for a custom size
 ```js
-var mySparticles = new Sparticles({ color: "red" }, 400, 300);
+let mySparticles = new Sparticles({ color: "red" }, 400, 300);
 ```
 
 # options
@@ -387,8 +412,15 @@ will be assigned a random image as it's shape from the array.
 
 This only applies [if the `shape` is set to `"image"`](#shape).
 
-
 # methods
+
+a few public methods can be accessed by storing a reference to the Sparticles instance
+and executed like so;
+
+```js
+let mySparticles = new Sparticles();
+mySparticles.destroy();
+```
 
 method                                                   | description
 ---------------------------------------------------------|------------------------------------------------------
@@ -396,5 +428,99 @@ method                                                   | description
 **[setCanvasSize( width, height )](#setCanvasSize)**     | set the new size of the canvas
 **[resetSparticles()](#resetSparticles)**                | reset all the particles on the canvas
 
-
 # styling
+
+If the Sparticles are simply going to be placed in a container (like a `<div>`) then the only
+styling that should be necessary is to set the width/height of the canvas [using the 
+`width` and `height` parameters](#parameters).
+
+---
+
+To place the Sparticles in the background of a web-page, you'll need to add a
+container to the `<body>` which the canvas can sit in, then `position` it `fixed`:
+
+```html
+<html>
+  <body>
+    <!-- your html web page content -->
+    <div class="sparticles-container"></div>
+  </body>
+</html>
+```
+
+Then we set up the CSS styling for the Sparticles container depending on our
+situation:
+```css
+/** 
+  * we need to make sure the background doesn't have a
+  * background color as we want to place the container
+  * behind it on the z-axis!
+  */
+html { background: black; }
+body { background: transparent; }
+
+.sparticles-container {
+  position: fixed;
+  left: 0; right: 0;
+  top: 0; bottom: 0;
+  /**
+   * z-index: -1; this makes the <body> still interactive 
+   * by placing the sparticles behind the content
+   */
+  z-index: -1; 
+}
+/**
+* we could a;so use "pointer-events: none;" in
+* modern browsers to put the particles on top of all our content
+*/
+@supports ( pointer-events: none ) {
+  .sparticles-container {
+    z-index: 2;
+    pointer-events: none;
+  }
+}
+```
+
+Finally we can initiate the Sparticles with the `.sparticles-container`
+as the DOM element it's bound to:
+```js
+let container = document.querySelector(".sparticles-container");
+let mySparticles = new Sparticles( container, { color: "red" });
+// no need for width/height as the  canvas will fill 
+// the container which is fixed to the viewport size
+```
+
+# performance
+
+Sparticles is generally quite fast! 
+
+It was designed to be the lightest (_within reason_) and fastest performing
+particles with such a large feature set!
+
+Sparticles was built because other offerings in the space were either 
+doing way too much and adding too many `kb` to load, or they were just 
+too slow and unable to serve enough particles to lower end devices 
+without chugging along jankily! 
+
+I used to get a lot of requests from Editorial/Content teams who wanted
+snow/sparkles/whatever on their home page during events, and I either had
+to reject because the plugins were killing our user's devices or accept
+and live knowing I've failed the users/customers! 😢 ~~ so Sparticles should fix that!
+
+## mobile
+
+Please take care of your mobile users! They are probably your primary user if you're
+running a commercial or non-tech website! use a script like below to determine the amount
+of particles based on their device;
+
+```js
+  let myElement = document.getElementById("myDiv");
+  // PLEASE DON'T PUSH A TON OF ANIMATION ON MOBILES!
+  let count = (/Mobi|Android/i.test(navigator.userAgent)) ? 100 : 500;
+  let mySparticles = new Sparticles(myElement, { count: count }, 400);
+```
+
+# why "Sparticles" ?
+```
+particles + [ speed ⚡ | snow ❄ | sparkles ✨ | stars ⭐ ] = Sparticles 🌈
+```
