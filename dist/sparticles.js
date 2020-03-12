@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.13.3
+ * @version 0.14.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -155,7 +155,7 @@ var Sparticles = (function () {
     var max = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
     var value = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : Math.random();
 
-    if (min === max) {
+    if (max <= min) {
       value = min;
     } else if ((min !== 0 || max !== 1) && max > min) {
       value = value * (max - min) + min;
@@ -373,13 +373,7 @@ var Sparticles = (function () {
 
 
   Sparticle.prototype.getStyle = function () {
-    var style = this.settings.style;
-
-    if (style !== "fill" && style !== "stroke") {
-      style = randomArray(["fill", "stroke"]);
-    }
-
-    return style;
+    return randomArray(this.settings.style);
   };
   /**
    * get a random delta (velocity) for the particle
@@ -444,7 +438,6 @@ var Sparticles = (function () {
   /**
    * get a random delta for the alpha change over time from
    * between a positive and negative alpha variance value
-   * (but only return a negative value for twinkle effect)
    * @returns {Number} - the alpha delta to be applied to particle
    */
 
@@ -561,12 +554,18 @@ var Sparticles = (function () {
     var delta = Math.abs(this.da);
     var over = alpha > this.settings.maxAlpha;
     var under = alpha < this.settings.minAlpha;
-    var tick = delta / 1000 * this.settings.alphaSpeed * 0.5; // if the particle is resetting the twinkle effect, then
+    var tick = delta / 1000 * this.settings.alphaSpeed * 0.5;
+    var flickerOn = roll(1 / 30);
+    var flickerOff = roll(1 / 30); // if the particle is resetting the twinkle effect, then
     // we simply want to quickly get back to max alpha
     // over a short period of time, otherwise just advance the tick
 
     if (this.resettingTwinkle) {
-      alpha += 0.02 * this.settings.alphaSpeed;
+      alpha += tick * 5;
+    } else if (flickerOn) {
+      alpha += tick * 50;
+    } else if (flickerOff) {
+      alpha -= tick * 25;
     } else {
       alpha -= tick;
     } // once the alpha is under the min alpha value, then we need
@@ -637,29 +636,22 @@ var Sparticles = (function () {
   };
 
   Sparticle.prototype.render = function (canvasses) {
-    var offscreenCanvas = canvasses[this.color][this.shape];
+    var particleCanvas = canvasses[this.color][this.shape];
 
     if (this.settings.shape[0] !== "image") {
-      offscreenCanvas = canvasses[this.color][this.shape][this.style];
+      particleCanvas = canvasses[this.color][this.shape][this.style];
     }
 
-    var canvasSize = offscreenCanvas.width;
+    var canvasSize = particleCanvas.width;
     var scale = this.size / canvasSize;
     var px = this.px / scale;
     var py = this.py / scale;
     this.ctx.globalAlpha = clamp(this.alpha, 0, 1);
     this.renderRotate();
-    this.renderComposition();
     this.ctx.transform(scale, 0, 0, scale, 0, 0);
-    this.ctx.drawImage(offscreenCanvas, 0, 0, canvasSize, canvasSize, px, py, canvasSize, canvasSize);
+    this.ctx.drawImage(particleCanvas, 0, 0, canvasSize, canvasSize, px, py, canvasSize, canvasSize);
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     return this;
-  };
-
-  Sparticle.prototype.renderComposition = function () {
-    if (this.ctx.globalCompositeOperation !== this.settings.composition) {
-      this.ctx.globalCompositeOperation = this.settings.composition;
-    }
   };
 
   Sparticle.prototype.renderRotate = function () {
@@ -749,111 +741,143 @@ var Sparticles = (function () {
     this.resizable = !width && !height;
     this.width = this.resizable ? this.el.clientWidth : width;
     this.height = this.resizable ? this.el.clientHeight : height;
-    return this.init();
-  };
-  /**
-   * initialise the sparticles instance
-   * @returns {Object} - reference to the Sparticles instance
-   */
+    /**
+     * initialise the sparticles instance
+     * @returns {Object} - reference to the Sparticles instance
+     */
+
+    this.init = function () {
+      var _this = this;
+
+      this.sparticles = [];
+      this.createColorArray();
+      this.createShapeArray();
+      this.createStyleArray();
+      this.setupMainCanvas();
+      this.setupOffscreenCanvasses(function () {
+        _this.createSparticles();
+
+        _this.start();
+      }); // defer to the default "handleEvent" handler
+      // https://developer.mozilla.org/en-US/docs/Web/API/EventListener/handleEvent
+
+      window.addEventListener("resize", this);
+      return this;
+    };
+    /**
+     * handle event for screen resize;
+     * debounce a canvas resize,
+     * reset the particles
+     */
 
 
-  Sparticles.prototype.init = function () {
-    var _this = this;
+    this.handleEvent = function (event) {
+      var _this2 = this;
 
-    this.sparticles = [];
-    this.createColorArray();
-    this.createShapeArray();
-    this.setupMainCanvas();
-    this.setupOffscreenCanvasses(function () {
-      _this.createSparticles();
+      if (event.type === "resize") {
+        clearTimeout(this.resizeTimer);
+        this.resizeTimer = setTimeout(function () {
+          if (_this2.resizable) {
+            _this2.width = _this2.el.clientWidth;
+            _this2.height = _this2.el.clientHeight;
 
-      _this.start();
-    });
-    window.addEventListener("resize", this);
-    return this;
-  };
-  /**
-   * debounce a canvas resize and reset the particles
-   */
-
-
-  Sparticles.prototype.handleEvent = function (event) {
-    var _this2 = this;
-
-    if (event.type === "resize") {
-      clearTimeout(this.resizeTimer);
-      this.resizeTimer = setTimeout(function () {
-        if (_this2.resizable) {
-          _this2.width = _this2.el.clientWidth;
-          _this2.height = _this2.el.clientHeight;
-
-          _this2.setCanvasSize().resetSparticles();
-        }
-      }, 200);
-    }
-  };
-  /**
-   * start/resume the sparticles animation
-   */
-
-
-  Sparticles.prototype.start = function () {
-    var me = this;
-
-    if (!this.loop) {
-      this.loop = new AnimationFrame(function (t) {
-        me.drawFrame(t);
-      });
-    }
-
-    this.loop.start();
-  };
-  /**
-   * stop/pause the sparticles animation
-   */
-
-
-  Sparticles.prototype.stop = function () {
-    this.loop.stop();
-  };
-  /**
-   * destroy the current instance and free up some memory
-   */
-
-
-  Sparticles.prototype.destroy = function () {
-    // stop the rendering and updating
-    this.stop(); // remove the canvas element from the DOM
-
-    this.el.removeChild(this.canvas); // remove the resize event for this instance
-
-    window.removeEventListener("resize", this); // delete all the properties from the instance
-    // to free up memory
-
-    for (var prop in this) {
-      if (this.hasOwnProperty(prop)) {
-        delete this[prop];
+            _this2.setCanvasSize().resetSparticles();
+          }
+        }, 200);
       }
-    }
-  };
-  /**
-   * set the canvas width and height
-   * @param {Number} width - the width of the canvas
-   * @param {Number} height - the height of the canvas
-   * @returns {Object} - the Sparticle instance (for chaining)
-   */
+    };
+    /**
+     * start/resume the sparticles animation
+     * @returns {Object} - the Sparticle instance (for chaining)
+     */
 
 
-  Sparticles.prototype.setCanvasSize = function (width, height) {
-    if (width) {
-      this.resizable = false;
-    }
+    this.start = function () {
+      var me = this;
 
-    this.width = width || this.width;
-    this.height = height || this.height;
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
-    return this;
+      if (!this.loop) {
+        this.loop = new AnimationFrame(function (t) {
+          me.drawFrame(t);
+        });
+      }
+
+      this.loop.start();
+      return this;
+    };
+    /**
+     * stop/pause the sparticles animation
+     * @returns {Object} - the Sparticle instance (for chaining)
+     */
+
+
+    this.stop = function () {
+      this.loop.stop();
+      return this;
+    };
+    /**
+     * destroy the current instance and free up some memory
+     * @returns {Object} - the Sparticle instance (for chaining)
+     */
+
+
+    this.destroy = function () {
+      // stop the rendering and updating
+      this.stop(); // remove the canvas element from the DOM
+
+      this.el.removeChild(this.canvas); // remove the resize event for this instance
+
+      window.removeEventListener("resize", this); // delete all the properties from the instance
+      // to free up memory
+
+      for (var prop in this) {
+        if (this.hasOwnProperty(prop)) {
+          delete this[prop];
+        }
+      }
+
+      return this;
+    };
+    /**
+     * set the canvas width and height
+     * @param {Number} width - the width of the canvas
+     * @param {Number} height - the height of the canvas
+     * @returns {Object} - the Sparticle instance (for chaining)
+     */
+
+
+    this.setCanvasSize = function (width, height) {
+      if (width) {
+        this.resizable = false;
+      }
+
+      this.width = width || this.width;
+      this.height = height || this.height;
+      this.canvas.width = this.width;
+      this.canvas.height = this.height;
+      return this;
+    };
+    /**
+     * create an array and populate it with new Sparticle instances.
+     * @returns {Array} the array of Sparticle instances
+     */
+
+
+    this.resetSparticles = this.createSparticles = function () {
+      this.sparticles = [];
+      this.ctx.globalCompositeOperation = this.settings.composition;
+
+      for (var i = 0; i < this.settings.count; i++) {
+        this.sparticles.push(new Sparticle(this));
+      }
+
+      this.sparticles.sort(function (a, b) {
+        return a.size > b.size;
+      });
+      return this.sparticles;
+    }; // initialise the sparticles, and return the instance.
+
+
+    return this.init();
   };
   /**
    * convert the input color to an array if it isn't already
@@ -865,7 +889,7 @@ var Sparticles = (function () {
     if (!Array.isArray(this.settings.color)) {
       if (this.settings.color === "rainbow") {
         // it would be silly to have an array of too many colours.
-        var colors = this.settings.count > 100 ? 100 : this.settings.count;
+        var colors = this.settings.count > 66 ? 66 : this.settings.count;
         this.settings.color = [];
 
         for (var i = 0; i < colors; i++) {
@@ -887,13 +911,28 @@ var Sparticles = (function () {
   Sparticles.prototype.createShapeArray = function () {
     if (!Array.isArray(this.settings.shape)) {
       if (this.settings.shape === "random") {
-        this.settings.shape = ["square", "circle", "triangle", "diamond"];
+        this.settings.shape = ["square", "circle", "star", "diamond"];
       } else {
         this.settings.shape = [this.settings.shape];
       }
     }
 
     return this.settings.shape;
+  };
+  /**
+   * convert the input style to an array
+   * @returns {Array} - array of styles for use in rendering
+   */
+
+
+  Sparticles.prototype.createStyleArray = function () {
+    if (this.settings.style !== "fill" && this.settings.style !== "stroke") {
+      this.settings.style = ["fill", "stroke"];
+    } else {
+      this.settings.style = [this.settings.style];
+    }
+
+    return this.settings.style;
   };
   /**
    * set up the canvas and bind to a property for
@@ -906,7 +945,6 @@ var Sparticles = (function () {
     this.canvas = document.createElement("canvas");
     this.canvas.setAttribute("class", "sparticles");
     this.ctx = this.canvas.getContext("2d");
-    this.ctx.globalCompositeOperation = this.settings.composition;
     this.setCanvasSize();
     this.el.appendChild(this.canvas);
     return this.canvas;
@@ -932,7 +970,8 @@ var Sparticles = (function () {
       } else {
         _this3.settings.shape.forEach(function (shape) {
           _this3.canvasses[color][shape] = _this3.canvasses[color][shape] || {};
-          ["fill", "stroke"].forEach(function (style) {
+
+          _this3.settings.style.forEach(function (style) {
             _this3.canvasses[color][shape][style] = document.createElement("canvas");
             var canvas = _this3.canvasses[color][shape][style];
             var ctx = canvas.getContext("2d");
@@ -1319,24 +1358,6 @@ var Sparticles = (function () {
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, size, size);
     return canvas;
-  };
-  /**
-   * create an array and populate it with new Sparticle instances.
-   * @returns {Array} the array of Sparticle instances
-   */
-
-
-  Sparticles.prototype.resetSparticles = Sparticles.prototype.createSparticles = function () {
-    this.sparticles = [];
-
-    for (var i = 0; i < this.settings.count; i++) {
-      this.sparticles.push(new Sparticle(this));
-    }
-
-    this.sparticles.sort(function (a, b) {
-      return a.size > b.size;
-    });
-    return this.sparticles;
   };
   /**
    * - wipe the canvas,
