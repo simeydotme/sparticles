@@ -210,6 +210,7 @@ Sparticles.prototype.createShapeArray = function() {
  */
 Sparticles.prototype.setupMainCanvas = function() {
   this.canvas = document.createElement("canvas");
+  this.canvas.setAttribute("class", "sparticles");
   this.ctx = this.canvas.getContext("2d");
   this.ctx.globalCompositeOperation = this.settings.composition;
   this.setCanvasSize();
