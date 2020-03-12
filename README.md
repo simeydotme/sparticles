@@ -17,7 +17,7 @@ snow, or stars on your homepage!</sup>
 - [methods](#methods)
 - [styling](#styling)
 - [performance](#performance)
-- [why?](#why-sparticles)
+- [why?](#why-sparticles-)
 
 ---
   
