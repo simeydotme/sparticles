@@ -156,11 +156,7 @@ Sparticle.prototype.getShapeOrImage = function() {
  * @returns {String} - either "fill" or "stroke"
  */
 Sparticle.prototype.getStyle = function() {
-  let style = this.settings.style;
-  if (style !== "fill" && style !== "stroke") {
-    style = randomArray(["fill", "stroke"]);
-  }
-  return style;
+  return randomArray(this.settings.style);
 };
 
 /**

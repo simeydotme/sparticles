@@ -11,12 +11,12 @@ let colors = {
 };
 
 let options = {
-  alphaSpeed: 0,
-  alphaVariance: 1,
+  alphaSpeed: 3,
+  alphaVariance: 8,
   color: [colors.color1, colors.color2, colors.color3, colors.color4],
   composition: "source-over",
-  bounce: true,
-  count: 100,
+  bounce: false,
+  count: 400,
   direction: 180,
   drift: 0,
   glow: 0,
@@ -30,18 +30,18 @@ let options = {
     "https://image.flaticon.com/icons/svg/24/24286.svg"
   ],
   maxAlpha: 1,
-  maxSize: 10,
+  maxSize: 12,
   minAlpha: 0,
-  minSize: 10,
-  parallax: 0,
-  rotate: true,
+  minSize: 2,
+  parallax: 10,
+  rotate: false,
   rotation: 0,
-  shape: "star",
+  shape: "diamond",
   speed: 0,
-  style: "fill",
-  twinkle: false,
-  xVariance: 5,
-  yVariance: 5,
+  style: "both",
+  twinkle: true,
+  xVariance: 0.2,
+  yVariance: 10,
 };
 
 window.onload = function() {
@@ -101,6 +101,7 @@ window.initGui = function() {
   const rerender = () => {
     s.createColorArray();
     s.createShapeArray();
+    s.createStyleArray();
     s.setupOffscreenCanvasses(function() {
       s.createSparticles();
     });
@@ -137,8 +138,8 @@ window.initGui = function() {
   const move = anim.addFolder("Movement");
   move.add(s.settings, "parallax", 0, 10, 0.1).onFinishChange(rerender);
   move.add(s.settings, "drift", 0, 10, 0.01).onFinishChange(rerender);
-  move.add(s.settings, "xVariance", 0, 10, 0.1).onFinishChange(rerender);
-  move.add(s.settings, "yVariance", 0, 10, 0.1).onFinishChange(rerender);
+  move.add(s.settings, "xVariance", 0, 20, 0.1).onFinishChange(rerender);
+  move.add(s.settings, "yVariance", 0, 20, 0.1).onFinishChange(rerender);
   const vis = gui.addFolder("Visual");
   vis.add(s.settings, "glow", 0,150).onFinishChange(rerender);
   vis.add(s.settings, "composition", composites).onFinishChange(rerender);

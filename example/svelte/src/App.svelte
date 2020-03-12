@@ -1,5 +1,5 @@
 <script>
-  import Sparticles from "sparticles";
+  import Sparticles from "../../../dist/sparticles.esm.js";
   let sparticles;
   let options = { color: "gold", shape: "star", speed: 50 };
   function addSparticles(node) {
