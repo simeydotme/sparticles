@@ -6,13 +6,6 @@
 <sup>For those occasions when you ***👏 just 👏 gotta 👏 have 👏*** sparkles, 
 snow, or stars on your homepage!</sup>  
 
-
-- ℹ **It's quite easy to achieve 120fps+ with over 1,000 particles on a decent computer!**  
-
-- ⚠ _But please remember **your users are not all running super-computers** with GPUs, they 
-are **probably on a mobile phone**. Please avoid running heavy animations on phones! [If you 
-really have to then I'd advise reducing the particles down to 100](#mobile) or less for a mobile device!_
-
 ![Image of little coloured stars known as "Sparticles" running at 120fps](example/example.png)
 
 
@@ -508,6 +501,12 @@ to reject because the plugins were killing our user's devices or accept
 and live knowing I've failed the users/customers! 😢 ~~ so Sparticles should fix that!
 
 ## mobile
+
+- ℹ **It's quite easy to achieve 120fps+ with over 1,000 particles on a decent computer!**  
+
+- ⚠ _But please remember **your users are not all running super-computers** with GPUs, they 
+are [**probably on a mobile phone**](https://www.statista.com/statistics/277125/share-of-website-traffic-coming-from-mobile-devices/). 
+Please avoid running heavy animations on phones! If you really have to then I'd advise reducing the particles down to 100 or less for a mobile device!_
 
 Please take care of your mobile users! They are probably your primary user if you're
 running a commercial or non-tech website! use a script like below to determine the amount
