@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 0.14.0
+ * @version 1.0.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -243,6 +243,8 @@ var Sparticles = (function () {
     this.style = this.getStyle();
     this.color = this.getColor();
     this.rotation = _.rotate ? radian(random(0, 360)) : 0;
+    this.vertical = _.direction > 150 && _.direction < 210 || _.direction > 330 && _.direction < 390 || _.direction > -30 && _.direction < 30;
+    this.horizontal = _.direction > 60 && _.direction < 120 || _.direction > 240 && _.direction < 300;
   };
   /**
    * initialise a particle with the default values from
@@ -299,14 +301,24 @@ var Sparticles = (function () {
 
 
   Sparticle.prototype.bounce = function () {
-    // reverse the particle's Y position
+    var _ = this.settings;
+    var dir = _.direction; // reverse the particle's Y position
+
     if (this.py <= 0 || this.py + this.size >= this.canvas.height) {
       this.dy = -this.dy;
+
+      if (this.horizontal) {
+        this.dd = -this.dd;
+      }
     } // reverse the particle's X position
 
 
     if (this.px <= 0 || this.px + this.size >= this.canvas.width) {
       this.dx = -this.dx;
+
+      if (this.vertical) {
+        this.dd = -this.dd;
+      }
     }
   };
   /**
@@ -592,17 +604,17 @@ var Sparticles = (function () {
   Sparticle.prototype.updatePosition = function () {
     if (this.settings.bounce && this.isTouchingEdge()) {
       this.bounce();
-      this.px += this.dx;
-      this.py += this.dy;
     } else if (this.isOffCanvas()) {
       this.reset();
-    } else {
-      this.px += this.dx;
-      this.py += this.dy; // drift must be applied after position x/y
-
-      this.updateDrift();
-      this.updateRotation();
+      return;
     }
+
+    this.px += this.dx;
+    this.py += this.dy; // drift must be applied after position x/y
+    // as it modifies the values by wave function
+
+    this.updateDrift();
+    this.updateRotation();
   };
   /**
    * progress the particle's rotation value according
@@ -622,14 +634,15 @@ var Sparticles = (function () {
 
 
   Sparticle.prototype.updateDrift = function () {
-    if (this.settings.drift && this.settings.speed) {
-      if (this.settings.direction > 150 && this.settings.direction < 210 || this.settings.direction > 330 && this.settings.direction < 390 || this.settings.direction > -30 && this.settings.direction < 30) {
-        // only apply horizontal drift if the particle's direction
-        // is somewhat vertical
+    var _ = this.settings;
+    var dir = _.direction;
+
+    if (_.drift && _.speed) {
+      if (this.vertical) {
+        // apply HORIZONTAL drift ~ when "direction" is mostly vertical.
         this.px += cartesian(this.frame + this.frameoffset)[0] * this.dd / (this.getDelta() * 15);
-      } else if (this.settings.direction > 60 && this.settings.direction < 120 || this.settings.direction > 240 && this.settings.direction < 300) {
-        // only apply vertical drift if the particle's direction
-        // is somewhat horizontal
+      } else if (this.horizontal) {
+        // apply VERTICAL drift ~ when "direction" is mostly horizontal.
         this.py += cartesian(this.frame + this.frameoffset)[1] * this.dd / (this.getDelta() * 15);
       }
     }
