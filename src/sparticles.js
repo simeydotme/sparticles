@@ -212,9 +212,7 @@ Sparticles.prototype.createColorArray = function() {
     _.color = [_.color];
   }
 
-  isRandom = _.color.some(function(c) {
-    return c === "random";
-  });
+  isRandom = _.color.some(c => c === "random");
 
   if (isRandom) {
     // it would be silly to have an array of too many colours.
@@ -231,14 +229,21 @@ Sparticles.prototype.createColorArray = function() {
  * @returns {Array} - array of shapes for use in rendering
  */
 Sparticles.prototype.createShapeArray = function() {
-  if (!Array.isArray(this.settings.shape)) {
-    if (this.settings.shape === "random") {
-      this.settings.shape = ["square", "circle", "star", "diamond"];
-    } else {
-      this.settings.shape = [this.settings.shape];
-    }
+  const _ = this.settings;
+  const isArray = Array.isArray(_.shape);
+  let isRandom = false;
+
+  if (!isArray) {
+    _.shape = [_.shape];
   }
-  return this.settings.shape;
+
+  isRandom = _.shape.some(c => c === "random");
+
+  if (isRandom) {
+    _.shape = ["square", "circle", "star", "diamond"];
+  }
+
+  return _.shape;
 };
 
 /**

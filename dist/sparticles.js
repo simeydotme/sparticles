@@ -173,7 +173,7 @@ var Sparticles = (function () {
     return array[Math.floor(random(0, array.length))];
   };
   /**
-   * return a random HSL colour string for use in rainbow effect
+   * return a random HSL colour string for use in random color effect
    * @returns {String} "hsl(100,100,80)"
    */
 
@@ -689,8 +689,9 @@ var Sparticles = (function () {
    * @param {Number} [options.drift=1] - the "driftiness" of particles which have a horizontal/vertical direction
    * @param {Number} [options.glow=0] - the glow effect size of each particle
    * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
-   * @param {(String|String[])} [options.color=rainbow] - css color as string, or array of color strings (can also be "rainbow")
-   * @param {Function} [options.rainbowColor=randomHsl(index,total)] - a custom function for setting the rainbow colors when color="rainbow"
+   * @param {(String|String[])} [options.color=random] - css color as string, or array of color strings (can also be "random")
+   * @param {Function} [options.randomColor=randomHsl(index,total)] - a custom function for setting the random colors when color="random"
+   * @param {Number} [options.randomColorCount=3] - the number of random colors to generate when color is "random"
    * @param {(String|String[])} [options.shape=circle] - shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
    * @param {(String|String[])} [options.imageUrl=] - if shape is "image", define an image url (can be data-uri, must be square (1:1 ratio))
    * @param {Number} [width] - the width of the canvas element
@@ -714,8 +715,9 @@ var Sparticles = (function () {
       alphaSpeed: 10,
       alphaVariance: 1,
       bounce: false,
-      color: "rainbow",
-      rainbowColor: randomHsl,
+      color: "random",
+      randomColor: randomHsl,
+      randomColorCount: 3,
       composition: "source-over",
       count: 50,
       direction: 180,
@@ -886,21 +888,26 @@ var Sparticles = (function () {
 
 
   Sparticles.prototype.createColorArray = function () {
-    if (!Array.isArray(this.settings.color)) {
-      if (this.settings.color === "rainbow") {
-        // it would be silly to have an array of too many colours.
-        var colors = this.settings.count > 66 ? 66 : this.settings.count;
-        this.settings.color = [];
+    var _ = this.settings;
+    var isArray = Array.isArray(_.color);
+    var isRandom = false;
 
-        for (var i = 0; i < colors; i++) {
-          this.settings.color[i] = this.settings.rainbowColor(i, colors);
-        }
-      } else {
-        this.settings.color = [this.settings.color];
+    if (!isArray) {
+      _.color = [_.color];
+    }
+
+    isRandom = _.color.some(function (c) {
+      return c === "random";
+    });
+
+    if (isRandom) {
+      // it would be silly to have an array of too many colours.
+      for (var i = 0; i < _.randomColorCount; i++) {
+        _.color[i] = _.randomColor(i, _.randomColorCount);
       }
     }
 
-    return this.settings.color;
+    return _.color;
   };
   /**
    * convert the input shape to an array if it isn't already
@@ -909,15 +916,23 @@ var Sparticles = (function () {
 
 
   Sparticles.prototype.createShapeArray = function () {
-    if (!Array.isArray(this.settings.shape)) {
-      if (this.settings.shape === "random") {
-        this.settings.shape = ["square", "circle", "star", "diamond"];
-      } else {
-        this.settings.shape = [this.settings.shape];
-      }
+    var _ = this.settings;
+    var isArray = Array.isArray(_.shape);
+    var isRandom = false;
+
+    if (!isArray) {
+      _.shape = [_.shape];
     }
 
-    return this.settings.shape;
+    isRandom = _.shape.some(function (c) {
+      return c === "random";
+    });
+
+    if (isRandom) {
+      _.shape = ["square", "circle", "star", "diamond"];
+    }
+
+    return _.shape;
   };
   /**
    * convert the input style to an array
