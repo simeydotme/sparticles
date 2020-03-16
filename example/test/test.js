@@ -13,7 +13,8 @@ let colors = {
 let options = {
   alphaSpeed: 3,
   alphaVariance: 8,
-  color: [colors.color1, colors.color2, colors.color3, colors.color4],
+  // color: [colors.color1, colors.color2, colors.color3, colors.color4],
+  randomColorCount: 3,
   composition: "source-over",
   bounce: false,
   count: 400,

@@ -161,32 +161,33 @@ let mySparticles = new Sparticles({ color: "red" }, 400, 300);
 
 A brief look at all the options, with more details below.
 
-option                              | type              | default         | description
-------------------------------------|-------------------|-----------------|-----------------------------------------------------
-**[composition](#composition)**     | `String`          | `source-over`   | canvas globalCompositeOperation value for particles
-**[count](#count)**                 | `Number`          | `50`            | number of particles on the canvas simultaneously
-**[speed](#speed)**                 | `Number`          | `10`            | default velocity of every particle
-**[parallax](#parallax)**           | `Number`          | `1`             | speed multiplier effect for larger particles (0 = none)
-**[direction](#direction)**         | `Number`          | `180`           | default direction of particles in degrees (0 = ↑, 180 = ↓)
-**[xVariance](#xVariance)**         | `Number`          | `2`             | random deviation of particles on x-axis from default direction
-**[yVariance](#yVariance)**         | `Number`          | `2`             | random deviation of particles on y-axis from default direction
-**[rotate](#rotate)**               | `Boolean`         | `true`          | can particles rotate
-**[rotation](#rotation)**           | `Number`          | `1`             | default rotational speed for every particle
-**[alphaSpeed](#alphaSpeed)**       | `Number`          | `10`            | rate of change in alpha over time
-**[alphaVariance](#alphaVariance)** | `Number`          | `1`             | random deviation of alpha change
-**[minAlpha](#minAlpha)**           | `Number`          | `0`             | minumum alpha value of every particle
-**[maxAlpha](#maxAlpha)**           | `Number`          | `1`             | maximum alpha value of every particle
-**[minSize](#minSize)**             | `Number`          | `1`             | minimum size of every particle
-**[maxSize](#maxSize)**             | `Number`          | `10`            | maximum size of every particle
-**[style](#style)**                 | `String`          | `fill`          | fill style of particles (one of; "fill", "stroke" or "both")
-**[bounce](#bounce)**               | `Boolean`         | `false`         | should the particles bounce off edge of canvas
-**[drift](#drift)**                 | `Number`          | `1`             | the "driftiness" of particles which have a horizontal/vertical direction
-**[glow](#glow)**                   | `Number`          | `0`             | the glow effect size of each particle
-**[twinkle](#twinkle)**             | `Boolean`         | `false`         | particles to exhibit an alternative alpha transition as "twinkling"
-**[color](#color)**                 | `String`/`Array`  | `rainbow`       | css color as string, or array of color strings (can also be "rainbow")
-**[rainbowColor](#rainbowColor)**   | `Function`        | `randomHsl`     | function for returning a random/rainbow color when the color is set as "rainbow"
-**[shape](#shape)**                 | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
-**[imageUrl](#imageUrl)**           | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, should be square (1:1 ratio))
+option                                     | type              | default         | description
+-------------------------------------------|-------------------|-----------------|-----------------------------------------------------
+**[composition](#composition)**            | `String`          | `source-over`   | canvas globalCompositeOperation value for particles
+**[count](#count)**                        | `Number`          | `50`            | number of particles on the canvas simultaneously
+**[speed](#speed)**                        | `Number`          | `10`            | default velocity of every particle
+**[parallax](#parallax)**                  | `Number`          | `1`             | speed multiplier effect for larger particles (0 = none)
+**[direction](#direction)**                | `Number`          | `180`           | default direction of particles in degrees (0 = ↑, 180 = ↓)
+**[xVariance](#xVariance)**                | `Number`          | `2`             | random deviation of particles on x-axis from default direction
+**[yVariance](#yVariance)**                | `Number`          | `2`             | random deviation of particles on y-axis from default direction
+**[rotate](#rotate)**                      | `Boolean`         | `true`          | can particles rotate
+**[rotation](#rotation)**                  | `Number`          | `1`             | default rotational speed for every particle
+**[alphaSpeed](#alphaSpeed)**              | `Number`          | `10`            | rate of change in alpha over time
+**[alphaVariance](#alphaVariance)**        | `Number`          | `1`             | random deviation of alpha change
+**[minAlpha](#minAlpha)**                  | `Number`          | `0`             | minumum alpha value of every particle
+**[maxAlpha](#maxAlpha)**                  | `Number`          | `1`             | maximum alpha value of every particle
+**[minSize](#minSize)**                    | `Number`          | `1`             | minimum size of every particle
+**[maxSize](#maxSize)**                    | `Number`          | `10`            | maximum size of every particle
+**[style](#style)**                        | `String`          | `fill`          | fill style of particles (one of; "fill", "stroke" or "both")
+**[bounce](#bounce)**                      | `Boolean`         | `false`         | should the particles bounce off edge of canvas
+**[drift](#drift)**                        | `Number`          | `1`             | the "driftiness" of particles which have a horizontal/vertical direction
+**[glow](#glow)**                          | `Number`          | `0`             | the glow effect size of each particle
+**[twinkle](#twinkle)**                    | `Boolean`         | `false`         | particles to exhibit an alternative alpha transition as "twinkling"
+**[color](#color)**                        | `String`/`Array`  | `random`        | css color as string, or array of color strings (can also be "random")
+**[randomColor](#randomColor)**            | `Function`        | `randomHsl()`   | function for returning a random color when the color is set as "random"
+**[randomColorCount](#randomColorCount)**  | `Function`        | `randomHsl()`   | function for returning a random color when the color is set as "random"
+**[shape](#shape)**                        | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
+**[imageUrl](#imageUrl)**                  | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, should be square (1:1 ratio))
 
 ---
 
@@ -359,19 +360,19 @@ Apply a "twinkle" effect to the particle when changing alpha. This works best wi
 
 ## `color`
 - Type: `String` / `Array<String>`
-- Default: `"rainbow"`
+- Default: `"random"`
 - Values: any valid css/html color string
 
 A CSS/HTML color string to apply across all particles.  
 If an array of colors (`[ "#ff0", "red", "hsl(10,50%,50%)" ]`) is given, then each particle will 
-be assigned a random color from the array. Additionally `"rainbow"` can be used to assign any random color.
+be assigned a random color from the array. Additionally `"random"` can be used to assign any random color.
 
-## `rainbowColor`
+## `randomColor`
 - Type: `Function`
-- Default: [`randomHSL()`](https://github.com/simeydotme/sparticles/blob/9a132505c19268a70ec31766119d29cb9bddd0b2/src/helpers.js#L55-L64)
+- Default: [`randomHSL()`](https://github.com/simeydotme/sparticles/blob/master/src/helpers.js#L55-L64)
 - Arguments: `index`, `total`
 
-Custom function to use when generating "`rainbow`" colors. The default function will return a fairly
+Custom function to use when generating `random` colors. The default function will return a fairly
 pleasant `hsl()` color with a high saturation and medium lightness. This can be overridden to suit
 your environment better. The two arguments (`index`, `total`) are `Integer`s and allow for a little
 psuedo-randomizing.
@@ -379,10 +380,18 @@ psuedo-randomizing.
 **example:**
 
 ```js
-rainbowColor: function( index, total ) {
+randomColor: function( index, total ) {
 	return `hsl( ${index}, 80%, ${total - index}% )`;
 }
 ```
+
+## `randomColorCount`
+- Type: `Number`
+- Default: `3`
+- Range: `1 - 50`
+
+How many random colors to generate when `color` is `random`. The more colors generated
+the more chance there is of a performance penalty. It should be OK up to `50`.
 
 ## `shape`
 - Type: `String` / `Array<String>`

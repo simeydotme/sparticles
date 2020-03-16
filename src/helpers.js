@@ -53,7 +53,7 @@ export const randomArray = array => {
 };
 
 /**
- * return a random HSL colour string for use in rainbow effect
+ * return a random HSL colour string for use in random color effect
  * @returns {String} "hsl(100,100,80)"
  */
 export const randomHsl = () => {
