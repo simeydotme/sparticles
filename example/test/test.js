@@ -17,9 +17,9 @@ let options = {
   randomColorCount: 3,
   composition: "source-over",
   bounce: false,
-  count: 400,
+  count: 1,
   direction: 180,
-  drift: 0,
+  drift: 30,
   glow: 0,
   imageUrl: [
     "./snowflake.png",
@@ -34,15 +34,15 @@ let options = {
   maxSize: 12,
   minAlpha: 0,
   minSize: 2,
-  parallax: 10,
+  parallax: 5,
   rotate: false,
   rotation: 0,
   shape: "random",
-  speed: 0,
+  speed: 10,
   style: "both",
   twinkle: true,
-  xVariance: 0.2,
-  yVariance: 10,
+  xVariance: 0,
+  yVariance: 0,
 };
 
 window.onload = function() {
@@ -138,7 +138,7 @@ window.initGui = function() {
   anim.add(s.settings, "rotation", 0, 100, 0.1).onFinishChange(rerender);
   const move = anim.addFolder("Movement");
   move.add(s.settings, "parallax", 0, 10, 0.1).onFinishChange(rerender);
-  move.add(s.settings, "drift", 0, 10, 0.01).onFinishChange(rerender);
+  move.add(s.settings, "drift", 0, 30, 0.01).onFinishChange(rerender);
   move.add(s.settings, "xVariance", 0, 20, 0.1).onFinishChange(rerender);
   move.add(s.settings, "yVariance", 0, 20, 0.1).onFinishChange(rerender);
   const vis = gui.addFolder("Visual");
