@@ -494,10 +494,14 @@ let mySparticles = new Sparticles( container, { color: "red" });
 
 # performance
 
-Sparticles is generally quite fast! 
+Sparticles is really quite fast! 
 
-It was designed to be the lightest (_within reason_) and fastest performing
-particles with such a large feature set!
+It was designed to be the smallest (_within reason_) and fastest performing
+particles script with such a large feature set! 
+
+Some other popular particle scripts will eat up to 50% of your CPU to 
+render 1,000 particles. Sparticles will do the same while only using 9% 
+and will run at a buttery 120fps if your device can refresh that fast!
 
 Sparticles was built because other offerings in the space were either 
 doing way too much and adding too many `kb` to load, or they were just 
