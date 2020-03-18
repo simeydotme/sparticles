@@ -9,8 +9,11 @@ import { cartesian, clamp, radian, random, randomArray, roll, round } from "./he
 export const Sparticle = function(parent) {
   if (parent) {
     this.canvas = parent.canvas;
-    this.images = parent.images;
     this.settings = parent.settings;
+    this.colors = parent.colors;
+    this.shapes = parent.shapes;
+    this.images = parent.images;
+    this.styles = parent.styles;
     this.ctx = parent.canvas.getContext("2d");
     this.setup();
     this.init();
@@ -35,9 +38,10 @@ Sparticle.prototype.setup = function() {
   this.dy = this.getDeltaY();
   this.dd = this.getDriftDelta();
   this.dr = this.getRotationDelta();
-  this.shape = this.getShapeOrImage();
-  this.style = this.getStyle();
   this.color = this.getColor();
+  this.shape = this.getShape();
+  this.image = this.getImage();
+  this.style = this.getStyle();
   this.rotation = _.rotate ? radian(random(0, 360)) : 0;
   this.vertical =
     (_.direction > 150 && _.direction < 210) ||
@@ -143,25 +147,40 @@ Sparticle.prototype.isTouchingEdge = function() {
  * @returns {String} - random color from color array
  */
 Sparticle.prototype.getColor = function() {
-  if (Array.isArray(this.settings.color)) {
+  if (this.settings.color === "random") {
+    return randomArray(this.colors);
+  } else if (Array.isArray(this.settings.color)) {
     return randomArray(this.settings.color);
+  } else {
+    return this.settings.color;
   }
 };
 
 /**
- * get a random shape or image for the particle from the
- * array of shapes set in the options object, or the array
- * of images, if the shape is set to "image"
- * @returns {String} - random shape or image from shape or image array
+ * get a random shape for the particle from the
+ * array of shapes set in the options object
+ * @returns {String} - random shape from shape array
  */
-Sparticle.prototype.getShapeOrImage = function() {
-  const shape = this.settings.shape;
-  if (Array.isArray(shape)) {
-    if (shape[0] === "image" && this.images) {
-      return randomArray(this.images);
-    } else {
-      return randomArray(shape);
-    }
+Sparticle.prototype.getShape = function() {
+  if (this.settings.shape === "random") {
+    return randomArray(this.shapes);
+  } else if (Array.isArray(this.settings.shape)) {
+    return randomArray(this.settings.shape);
+  } else {
+    return this.settings.shape;
+  }
+};
+
+/**
+ * get the image for the particle from the array
+ * of possible image urls
+ * @returns {String} - random imageUrl from imageUrl array
+ */
+Sparticle.prototype.getImage = function() {
+  if (Array.isArray(this.settings.imageUrl)) {
+    return randomArray(this.settings.imageUrl);
+  } else {
+    return this.settings.imageUrl;
   }
 };
 
@@ -171,7 +190,7 @@ Sparticle.prototype.getShapeOrImage = function() {
  * @returns {String} - either "fill" or "stroke"
  */
 Sparticle.prototype.getStyle = function() {
-  return randomArray(this.settings.style);
+  return randomArray(this.styles);
 };
 
 /**
@@ -411,9 +430,11 @@ Sparticle.prototype.updateDrift = function() {
 };
 
 Sparticle.prototype.render = function(canvasses) {
-  let particleCanvas = canvasses[this.color][this.shape];
-  if (this.settings.shape[0] !== "image") {
+  let particleCanvas;
+  if (this.shape !== "image") {
     particleCanvas = canvasses[this.color][this.shape][this.style];
+  } else {
+    particleCanvas = canvasses[this.color][this.shape][this.image];
   }
   const canvasSize = particleCanvas.width;
   const scale = this.size / canvasSize;

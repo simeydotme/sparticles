@@ -178,16 +178,16 @@ option                                     | type              | default        
 **[maxAlpha](#maxAlpha)**                  | `Number`          | `1`             | maximum alpha value of every particle
 **[minSize](#minSize)**                    | `Number`          | `1`             | minimum size of every particle
 **[maxSize](#maxSize)**                    | `Number`          | `10`            | maximum size of every particle
-**[style](#style)**                        | `String`          | `fill`          | fill style of particles (one of; "fill", "stroke" or "both")
 **[bounce](#bounce)**                      | `Boolean`         | `false`         | should the particles bounce off edge of canvas
 **[drift](#drift)**                        | `Number`          | `1`             | the "driftiness" of particles which have a horizontal/vertical direction
 **[glow](#glow)**                          | `Number`          | `0`             | the glow effect size of each particle
 **[twinkle](#twinkle)**                    | `Boolean`         | `false`         | particles to exhibit an alternative alpha transition as "twinkling"
+**[style](#style)**                        | `String`          | `fill`          | fill style of particles (one of; "fill", "stroke" or "both")
+**[shape](#shape)**                        | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
 **[color](#color)**                        | `String`/`Array`  | `random`        | css color as string, or array of color strings (can also be "random")
 **[randomColor](#randomColor)**            | `Function`        | `randomHsl()`   | function for returning a random color when the color is set as "random"
 **[randomColorCount](#randomColorCount)**  | `Function`        | `randomHsl()`   | function for returning a random color when the color is set as "random"
-**[shape](#shape)**                        | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
-**[imageUrl](#imageUrl)**                  | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, should be square (1:1 ratio))
+**[imageUrl](#imageUrl)**                  | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, **should be square (1:1 ratio)**)
 
 ---
 
@@ -411,8 +411,9 @@ particle shape from an image when combined with `imageUrl`](#imageUrl).
 Determine the custom image to be used for all the particles.
 If an array of urls (`[ "http://my.image/shape.png", "http://my.svg/shape.svg" ]`) is given, then each particle
 will be assigned a random image as it's shape from the array.
+<sup>**This image should be a square (1:1)**</sup>  
 
-This only applies [if the `shape` is set to `"image"`](#shape).
+`imageUrl` only has an effect [if a `shape` in the array is; `"image"`](#shape).
 
 # methods
 
