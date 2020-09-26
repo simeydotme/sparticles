@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 1.1.0
+ * @version 1.2.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -773,7 +773,7 @@ var Sparticles = (function () {
       yVariance: 2
     };
     this.el = node || document.body;
-    this.settings = _objectSpread2({}, defaults, {}, options);
+    this.settings = _objectSpread2(_objectSpread2({}, defaults), options);
     this.resizable = !width && !height;
     this.width = this.resizable ? this.el.clientWidth : width;
     this.height = this.resizable ? this.el.clientHeight : height;

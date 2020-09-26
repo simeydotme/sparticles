@@ -1,5 +1,5 @@
 import { terser } from "rollup-plugin-terser";
-import babel from "rollup-plugin-babel";
+import babel from "@rollup/plugin-babel";
 import filesize from "rollup-plugin-filesize";
 import livereload from "rollup-plugin-livereload";
 import serve from "rollup-plugin-serve";
@@ -46,6 +46,7 @@ export default [
       babel({
         babelrc: false,
         exclude: "node_modules/**",
+        babelHelpers: "bundled",
       }),
       dev &&
         serve({

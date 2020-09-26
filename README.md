@@ -413,7 +413,8 @@ If an array of urls (`[ "http://my.image/shape.png", "http://my.svg/shape.svg" ]
 will be assigned a random image as it's shape from the array.
 <sup>**This image should be a square (1:1)**</sup>  
 
-`imageUrl` only has an effect [if a `shape` in the array is; `"image"`](#shape).
+- ℹ `imageUrl` only has an effect [if a `shape` in the array is; `"image"`](#shape).
+- ℹ `imageUrl` can accept **svg**, but the `<svg>` root needs a width/height. [(see issue)](https://github.com/simeydotme/sparticles/issues/2);
 
 # methods
 
