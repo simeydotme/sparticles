@@ -186,7 +186,7 @@ option                                     | type              | default        
 **[shape](#shape)**                        | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
 **[color](#color)**                        | `String`/`Array`  | `random`        | css color as string, or array of color strings (can also be "random")
 **[randomColor](#randomColor)**            | `Function`        | `randomHsl()`   | function for returning a random color when the color is set as "random"
-**[randomColorCount](#randomColorCount)**  | `Function`        | `randomHsl()`   | function for returning a random color when the color is set as "random"
+**[randomColorCount](#randomColorCount)**  | `Number`          | `3`             | number of random colours when the color is set as "random"
 **[imageUrl](#imageUrl)**                  | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, **should be square (1:1 ratio)**)
 
 ---
