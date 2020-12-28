@@ -28,7 +28,7 @@ Depending on how your project looks,
 - you may want to [include a direct link to the script](#vanilla) and 
 then initialise the sparkles,
 - or you may want
-to [import the module in to your application](#bundler) for a more modern approach.
+to [import the module in to your application](#app--bundler) for a more modern approach.
 
 ## vanilla
 
