@@ -6,7 +6,7 @@
 <sup>For those occasions when you ***👏 just 👏 gotta 👏 have 👏*** sparkles, 
 snow, or stars on your homepage!</sup>  
 
-![Image of little coloured stars known as "Sparticles" running at 120fps](example/example.png)
+![Image of little coloured stars known as "Sparticles" running at 120fps](example/example.gif)
 
 
 ---
