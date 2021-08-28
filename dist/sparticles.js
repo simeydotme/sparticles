@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 1.2.0
+ * @version 1.2.1
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -904,13 +904,24 @@ var Sparticles = (function () {
       this.ctx.globalCompositeOperation = this.settings.composition;
 
       for (var i = 0; i < this.settings.count; i++) {
-        this.sparticles.push(new Sparticle(this));
+        this.sparticles.push(new Sparticle(this, i));
       }
 
-      this.sparticles.sort(function (a, b) {
-        return a.size > b.size;
-      });
+      this.sort();
       return this.sparticles;
+    };
+    /**
+     * sort the particle array by size so that parallax effect
+     * doesn't appear to have slower/smaller particles in foreground
+     */
+
+
+    this.sort = function () {
+      if (this.settings.parallax) {
+        this.sparticles.sort(function (a, b) {
+          return a.size - b.size;
+        });
+      }
     }; // initialise the sparticles, and return the instance.
 
 
@@ -1389,6 +1400,7 @@ var Sparticles = (function () {
    * - wipe the canvas,
    * - update each sparticle,
    * - render each sparticle
+   * - sort so that larger particles on top
    * @returns {Array} the array of Sparticle instances
    */
 
@@ -1401,6 +1413,7 @@ var Sparticles = (function () {
       sparticle.update().render(this.canvasses);
     }
 
+    this.sort();
     return this.sparticles;
   };
 

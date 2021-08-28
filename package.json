@@ -1,6 +1,6 @@
 {
   "name": "sparticles",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Lightweight, High Performance Particles in Canvas",
   "main": "dist/sparticles.esm.js",
   "files": [

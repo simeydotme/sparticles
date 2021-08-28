@@ -188,12 +188,20 @@ const Sparticles = function(node, options, width, height) {
     this.sparticles = [];
     this.ctx.globalCompositeOperation = this.settings.composition;
     for (let i = 0; i < this.settings.count; i++) {
-      this.sparticles.push(new Sparticle(this));
+      this.sparticles.push(new Sparticle(this, i));
     }
-    this.sparticles.sort((a, b) => {
-      return a.size > b.size;
-    });
+    this.sort();
     return this.sparticles;
+  };
+
+  /**
+   * sort the particle array by size so that parallax effect
+   * doesn't appear to have slower/smaller particles in foreground
+   */
+  this.sort = function() {
+    if (this.settings.parallax) {
+      this.sparticles.sort((a, b) => a.size - b.size);
+    }
   };
 
   // initialise the sparticles, and return the instance.
@@ -667,6 +675,7 @@ Sparticles.prototype.drawOffscreenCanvasForImage = function(image, color, canvas
  * - wipe the canvas,
  * - update each sparticle,
  * - render each sparticle
+ * - sort so that larger particles on top
  * @returns {Array} the array of Sparticle instances
  */
 Sparticles.prototype.drawFrame = function() {
@@ -675,6 +684,7 @@ Sparticles.prototype.drawFrame = function() {
     let sparticle = this.sparticles[i];
     sparticle.update().render(this.canvasses);
   }
+  this.sort();
   return this.sparticles;
 };
 
