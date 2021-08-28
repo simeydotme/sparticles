@@ -389,11 +389,19 @@ Sparticles.prototype.renderGlow = function(ctx, color, size) {
  * @param {CanvasRenderingContext2D} ctx - the canvas context
  * @param {String} style - style (either "fill" or "stroke")
  */
-Sparticles.prototype.renderColor = function(ctx, style) {
+Sparticles.prototype.renderColor = function(ctx, style, path) {
   if (style === "fill") {
-    ctx.fill();
+    if (path) {
+      ctx.fill(path);
+    } else {
+      ctx.fill();
+    }
   } else {
-    ctx.stroke();
+    if (path) {
+      ctx.stroke(path);
+    } else {
+      ctx.stroke();
+    }
   }
 };
 
@@ -428,13 +436,14 @@ Sparticles.prototype.offScreenCanvas.circle = function(style, color, canvas) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
-  const canvasSize = size + lineSize + glowSize;
+  const canvasSize = size + lineSize * 2 + glowSize;
+  const shapeSize = style === "stroke" ? size - lineSize : size;
   canvas.width = canvasSize;
   canvas.height = canvasSize;
   this.renderGlow(ctx, color, size);
   this.renderStyle(ctx, color, lineSize, style);
   ctx.beginPath();
-  ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
+  ctx.ellipse(canvasSize / 2, canvasSize / 2, shapeSize / 2, shapeSize / 2, 0, 0, 360);
   this.renderColor(ctx, style);
   return canvas;
 };
@@ -452,13 +461,14 @@ Sparticles.prototype.offScreenCanvas.square = function(style, color, canvas) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
-  const canvasSize = size + lineSize + glowSize;
+  const canvasSize = size + lineSize * 2 + glowSize;
+  const shapeSize = style === "stroke" ? size - lineSize : size;
   canvas.width = canvasSize;
   canvas.height = canvasSize;
   this.renderGlow(ctx, color, size);
   this.renderStyle(ctx, color, lineSize, style);
   ctx.beginPath();
-  ctx.rect(canvasSize / 2 - size / 2, canvasSize / 2 - size / 2, size, size);
+  ctx.rect(canvasSize / 2 - shapeSize / 2, canvasSize / 2 - shapeSize / 2, shapeSize, shapeSize);
   this.renderColor(ctx, style);
   return canvas;
 };
@@ -476,7 +486,7 @@ Sparticles.prototype.offScreenCanvas.line = function(style, color, canvas) {
   const size = this.settings.maxSize * 2;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
-  const canvasSize = size + lineSize + glowSize;
+  const canvasSize = size + lineSize * 2 + glowSize;
   const startx = canvasSize / 2 - size / 2;
   const starty = canvasSize / 2 - size / 2;
   canvas.width = canvasSize;
@@ -505,18 +515,19 @@ Sparticles.prototype.offScreenCanvas.triangle = function(style, color, canvas) {
   const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
-  const canvasSize = size + lineSize + glowSize;
-  const height = size * (Math.sqrt(3) / 2);
+  const canvasSize = size + lineSize * 2 + glowSize;
+  const shapeSize = style === "stroke" ? size - lineSize : size;
+  const height = shapeSize * (Math.sqrt(3) / 2);
   const startx = canvasSize / 2;
-  const starty = canvasSize / 2 - size / 2;
+  const starty = canvasSize / 2 - shapeSize / 2;
   canvas.width = canvasSize;
   canvas.height = canvasSize;
   this.renderGlow(ctx, color, size);
   this.renderStyle(ctx, color, lineSize, style);
   ctx.beginPath();
   ctx.moveTo(startx, starty);
-  ctx.lineTo(startx - size / 2, starty + height);
-  ctx.lineTo(startx + size / 2, starty + height);
+  ctx.lineTo(startx - shapeSize / 2, starty + height);
+  ctx.lineTo(startx + shapeSize / 2, starty + height);
   ctx.closePath();
   this.renderColor(ctx, style);
   return canvas;
@@ -531,57 +542,23 @@ Sparticles.prototype.offScreenCanvas.triangle = function(style, color, canvas) {
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
 Sparticles.prototype.offScreenCanvas.diamond = function(style, color, canvas) {
+  const pathSize = 100;
+  const path = new Path2D(
+    "M43,83.74,48.63,99a1.46,1.46,0,0,0,2.74,0L57,83.74A45.09,45.09,0,0,1,83.74,57L99,51.37a1.46,1.46,0,0,0,0-2.74L83.74,43A45.11,45.11,0,0,1,57,16.26L51.37,1a1.46,1.46,0,0,0-2.74,0L43,16.26A45.11,45.11,0,0,1,16.26,43L1,48.63a1.46,1.46,0,0,0,0,2.74L16.26,57A45.09,45.09,0,0,1,43,83.74Z"
+  );
   const ctx = canvas.getContext("2d");
   const size = this.settings.maxSize;
-  const half = size / 2;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
-  const canvasSize = size + lineSize + glowSize;
-  const mid = canvasSize / 2;
-  const anchor = size * 0.08;
-  const pointx = size * 0.02;
-  const startx = mid - half;
-  const starty = mid;
+  const canvasSize = size + lineSize * 2 + glowSize;
+  const scale = canvasSize / ((pathSize + glowSize) * 1.1);
   canvas.width = canvasSize;
   canvas.height = canvasSize;
   this.renderGlow(ctx, color, size);
-  this.renderStyle(ctx, color, lineSize, style);
-  ctx.beginPath();
-  ctx.moveTo(startx + pointx, starty);
-  ctx.bezierCurveTo(
-    mid - anchor / 2,
-    mid - anchor * 2,
-    mid - anchor * 2,
-    mid - anchor / 2,
-    mid,
-    mid - half
-  );
-  ctx.bezierCurveTo(
-    mid + anchor * 2,
-    mid - anchor / 2,
-    mid + anchor / 2,
-    mid - anchor * 2,
-    mid + half - pointx,
-    mid
-  );
-  ctx.bezierCurveTo(
-    mid + anchor / 2,
-    mid + anchor * 2,
-    mid + anchor * 2,
-    mid + anchor / 2,
-    mid,
-    mid + half
-  );
-  ctx.bezierCurveTo(
-    mid - anchor * 2,
-    mid + anchor / 2,
-    mid - anchor / 2,
-    mid + anchor * 2,
-    startx + pointx,
-    starty
-  );
-  ctx.closePath();
-  this.renderColor(ctx, style);
+  this.renderStyle(ctx, color, lineSize / scale, style);
+  ctx.scale(scale, scale);
+  ctx.translate(pathSize * 0.05 + glowSize * 0.5, pathSize * 0.05 + glowSize * 0.5);
+  this.renderColor(ctx, style, path);
   return canvas;
 };
 
@@ -594,60 +571,23 @@ Sparticles.prototype.offScreenCanvas.diamond = function(style, color, canvas) {
  * @returns {HTMLCanvasElement} - the created offscreen canvas
  */
 Sparticles.prototype.offScreenCanvas.star = function(style, color, canvas) {
+  const pathSize = 100;
+  const path = new Path2D(
+    "M99.86,36.45a2.94,2.94,0,0,0-2.37-2l-31-4.54L52.63,1.64a2.93,2.93,0,0,0-5.26,0L33.51,29.91l-31,4.54a3,3,0,0,0-2.37,2,3,3,0,0,0,.74,3l22.44,22L18,92.55A2.94,2.94,0,0,0,20.91,96a2.86,2.86,0,0,0,1.36-.34L50,81,77.73,95.66a2.91,2.91,0,0,0,3.08-.22A3,3,0,0,0,82,92.55l-5.3-31.07,22.44-22A3,3,0,0,0,99.86,36.45Z"
+  );
   const ctx = canvas.getContext("2d");
-  const size = 52;
+  const size = this.settings.maxSize;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
   const canvasSize = size + lineSize * 2 + glowSize;
+  const scale = canvasSize / ((pathSize + glowSize) * 1.1);
   canvas.width = canvasSize;
   canvas.height = canvasSize;
+  ctx.scale(scale, scale);
   this.renderGlow(ctx, color, size);
-  this.renderStyle(ctx, color, lineSize, style);
-  ctx.translate(lineSize / 2 + glowSize / 2, lineSize / 2 + glowSize / 2 - 1);
-  ctx.beginPath();
-  ctx.moveTo(27.76, 2.07);
-  ctx.lineTo(34.28, 15.46);
-  ctx.translate(36.01480792437574, 14.614221385040288);
-  ctx.arc(0, 0, 1.93, 2.687967128721911, 1.7293919056045395, 1);
-  ctx.translate(-36.01480792437574, -14.614221385040288);
-  ctx.lineTo(50.37, 18.7);
-  ctx.translate(50.10443046629834, 20.601544851632347);
-  ctx.arc(0, 0, 1.92, -1.4320339785975214, 0.8159284165499665, 0);
-  ctx.translate(-50.10443046629834, -20.601544851632347);
-  ctx.lineTo(40.78, 32.36);
-  ctx.translate(42.13415324373887, 33.735197801216785);
-  ctx.arc(0, 0, 1.93, -2.3484841809999386, -3.3054346524687857, 1);
-  ctx.translate(-42.13415324373887, -33.735197801216785);
-  ctx.lineTo(42.7, 48.76);
-  ctx.translate(40.81489078457234, 49.06734873663269);
-  ctx.arc(0, 0, 1.91, -0.16161824093711977, 2.052504457600845, 0);
-  ctx.translate(-40.81489078457234, -49.06734873663269);
-  ctx.lineTo(26.83, 43.76);
-  ctx.translate(25.939999999999998, 45.438660180024534);
-  ctx.arc(0, 0, 1.9, -1.083293536758034, -2.0582991168317593, 1);
-  ctx.translate(-25.939999999999998, -45.438660180024534);
-  ctx.lineTo(11.92, 50.7);
-  ctx.translate(11.046023488962076, 49.00168758523234);
-  ctx.arc(0, 0, 1.91, 1.0955254432622383, 3.3002085355055915, 0);
-  ctx.translate(-11.046023488962076, -49.00168758523234);
-  ctx.lineTo(11.7, 34);
-  ctx.translate(9.820265754085725, 33.66132734870218);
-  ctx.arc(0, 0, 1.91, 0.178258078542773, -0.7933922953534395, 1);
-  ctx.translate(-9.820265754085725, -33.66132734870218);
-  ctx.lineTo(0.57, 21.85);
-  ctx.translate(1.9278161466350117, 20.478418681981545);
-  ctx.arc(0, 0, 1.93, 2.351151232528948, 4.5627030955491055, 0);
-  ctx.translate(-1.9278161466350117, -20.478418681981545);
-  ctx.lineTo(16.31, 16.47);
-  ctx.translate(16.062056630005188, 14.576161547207466);
-  ctx.arc(0, 0, 1.91, 1.4406156600933306, 0.4870016654036473, 1);
-  ctx.translate(-16.062056630005188, -14.576161547207466);
-  ctx.lineTo(24.33, 2.07);
-  ctx.translate(26.045, 2.9107585860400085);
-  ctx.arc(0, 0, 1.91, -2.6857849028374465, -0.45580775075234703, 0);
-  ctx.translate(-26.045, -2.9107585860400085);
-  ctx.closePath();
-  this.renderColor(ctx, style);
+  this.renderStyle(ctx, color, lineSize / scale, style);
+  ctx.translate(pathSize * 0.05 + glowSize * 0.5, pathSize * 0.05 + glowSize * 0.5);
+  this.renderColor(ctx, style, path);
   return canvas;
 };
 
