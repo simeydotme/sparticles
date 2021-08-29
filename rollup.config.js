@@ -59,6 +59,12 @@ export default [
     ],
     watch: {
       include: "src/**",
+      chokidar: {
+        usePolling: true,
+        interval: 2000,
+        binaryInterval: 2000,
+      },
+      buildDelay: 1000,
     },
   },
 ];

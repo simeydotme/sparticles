@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 1.2.1
+ * @version 1.3.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -10,29 +10,18 @@
 var Sparticles = (function () {
   'use strict';
 
-  function _defineProperty(obj, key, value) {
-    if (key in obj) {
-      Object.defineProperty(obj, key, {
-        value: value,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      });
-    } else {
-      obj[key] = value;
-    }
-
-    return obj;
-  }
-
   function ownKeys(object, enumerableOnly) {
     var keys = Object.keys(object);
 
     if (Object.getOwnPropertySymbols) {
       var symbols = Object.getOwnPropertySymbols(object);
-      if (enumerableOnly) symbols = symbols.filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-      });
+
+      if (enumerableOnly) {
+        symbols = symbols.filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        });
+      }
+
       keys.push.apply(keys, symbols);
     }
 
@@ -57,6 +46,21 @@ var Sparticles = (function () {
     }
 
     return target;
+  }
+
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
   }
 
   /**
@@ -1099,6 +1103,15 @@ var Sparticles = (function () {
     return clamp(size / 20, 1, 5);
   };
   /**
+   * return the offscreenCanvas size to generate for
+   * @returns {Number} - the maxSize of the offscreen canvas
+   */
+
+
+  Sparticles.prototype.getOffscreenCanvasSize = function () {
+    return clamp(this.settings.maxSize, this.settings.minSize, this.settings.maxSize);
+  };
+  /**
    * set the fill/stroke style (color & width) for each particle's offscreen canvas
    * @param {CanvasRenderingContext2D} ctx - the canvas context
    * @param {String} color - the color to fill/stroke with
@@ -1135,11 +1148,19 @@ var Sparticles = (function () {
    */
 
 
-  Sparticles.prototype.renderColor = function (ctx, style) {
+  Sparticles.prototype.renderColor = function (ctx, style, path) {
     if (style === "fill") {
-      ctx.fill();
+      if (path) {
+        ctx.fill(path);
+      } else {
+        ctx.fill();
+      }
     } else {
-      ctx.stroke();
+      if (path) {
+        ctx.stroke(path);
+      } else {
+        ctx.stroke();
+      }
     }
   };
   /**
@@ -1173,16 +1194,17 @@ var Sparticles = (function () {
 
   Sparticles.prototype.offScreenCanvas.circle = function (style, color, canvas) {
     var ctx = canvas.getContext("2d");
-    var size = this.settings.maxSize;
+    var size = this.getOffscreenCanvasSize();
     var lineSize = this.getLineSize(size);
     var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize;
+    var canvasSize = size + lineSize * 2 + glowSize;
+    var shapeSize = style === "stroke" ? size - lineSize : size;
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     this.renderGlow(ctx, color, size);
     this.renderStyle(ctx, color, lineSize, style);
     ctx.beginPath();
-    ctx.ellipse(canvasSize / 2, canvasSize / 2, size / 2, size / 2, 0, 0, 360);
+    ctx.ellipse(canvasSize / 2, canvasSize / 2, shapeSize / 2, shapeSize / 2, 0, 0, 360);
     this.renderColor(ctx, style);
     return canvas;
   };
@@ -1198,16 +1220,17 @@ var Sparticles = (function () {
 
   Sparticles.prototype.offScreenCanvas.square = function (style, color, canvas) {
     var ctx = canvas.getContext("2d");
-    var size = this.settings.maxSize;
+    var size = this.getOffscreenCanvasSize();
     var lineSize = this.getLineSize(size);
     var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize;
+    var canvasSize = size + lineSize * 2 + glowSize;
+    var shapeSize = style === "stroke" ? size - lineSize : size;
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     this.renderGlow(ctx, color, size);
     this.renderStyle(ctx, color, lineSize, style);
     ctx.beginPath();
-    ctx.rect(canvasSize / 2 - size / 2, canvasSize / 2 - size / 2, size, size);
+    ctx.rect(canvasSize / 2 - shapeSize / 2, canvasSize / 2 - shapeSize / 2, shapeSize, shapeSize);
     this.renderColor(ctx, style);
     return canvas;
   };
@@ -1223,10 +1246,10 @@ var Sparticles = (function () {
 
   Sparticles.prototype.offScreenCanvas.line = function (style, color, canvas) {
     var ctx = canvas.getContext("2d");
-    var size = this.settings.maxSize * 2;
+    var size = this.getOffscreenCanvasSize() * 1.5;
     var lineSize = this.getLineSize(size);
     var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize;
+    var canvasSize = size + lineSize * 2 + glowSize;
     var startx = canvasSize / 2 - size / 2;
     var starty = canvasSize / 2 - size / 2;
     canvas.width = canvasSize;
@@ -1253,21 +1276,22 @@ var Sparticles = (function () {
 
   Sparticles.prototype.offScreenCanvas.triangle = function (style, color, canvas) {
     var ctx = canvas.getContext("2d");
-    var size = this.settings.maxSize;
+    var size = this.getOffscreenCanvasSize();
     var lineSize = this.getLineSize(size);
     var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize;
-    var height = size * (Math.sqrt(3) / 2);
+    var canvasSize = size + lineSize * 2 + glowSize;
+    var shapeSize = style === "stroke" ? size - lineSize : size;
+    var height = shapeSize * (Math.sqrt(3) / 2);
     var startx = canvasSize / 2;
-    var starty = canvasSize / 2 - size / 2;
+    var starty = canvasSize / 2 - shapeSize / 2;
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     this.renderGlow(ctx, color, size);
     this.renderStyle(ctx, color, lineSize, style);
     ctx.beginPath();
     ctx.moveTo(startx, starty);
-    ctx.lineTo(startx - size / 2, starty + height);
-    ctx.lineTo(startx + size / 2, starty + height);
+    ctx.lineTo(startx - shapeSize / 2, starty + height);
+    ctx.lineTo(startx + shapeSize / 2, starty + height);
     ctx.closePath();
     this.renderColor(ctx, style);
     return canvas;
@@ -1283,29 +1307,21 @@ var Sparticles = (function () {
 
 
   Sparticles.prototype.offScreenCanvas.diamond = function (style, color, canvas) {
+    var pathSize = 100;
+    var path = new Path2D("M43,83.74,48.63,99a1.46,1.46,0,0,0,2.74,0L57,83.74A45.09,45.09,0,0,1,83.74,57L99,51.37a1.46,1.46,0,0,0,0-2.74L83.74,43A45.11,45.11,0,0,1,57,16.26L51.37,1a1.46,1.46,0,0,0-2.74,0L43,16.26A45.11,45.11,0,0,1,16.26,43L1,48.63a1.46,1.46,0,0,0,0,2.74L16.26,57A45.09,45.09,0,0,1,43,83.74Z");
     var ctx = canvas.getContext("2d");
-    var size = this.settings.maxSize;
-    var half = size / 2;
+    var size = this.getOffscreenCanvasSize();
     var lineSize = this.getLineSize(size);
     var glowSize = this.getGlowSize(size);
-    var canvasSize = size + lineSize + glowSize;
-    var mid = canvasSize / 2;
-    var anchor = size * 0.08;
-    var pointx = size * 0.02;
-    var startx = mid - half;
-    var starty = mid;
+    var canvasSize = size + lineSize * 2 + glowSize;
+    var scale = canvasSize / ((pathSize + glowSize) * 1.1);
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     this.renderGlow(ctx, color, size);
-    this.renderStyle(ctx, color, lineSize, style);
-    ctx.beginPath();
-    ctx.moveTo(startx + pointx, starty);
-    ctx.bezierCurveTo(mid - anchor / 2, mid - anchor * 2, mid - anchor * 2, mid - anchor / 2, mid, mid - half);
-    ctx.bezierCurveTo(mid + anchor * 2, mid - anchor / 2, mid + anchor / 2, mid - anchor * 2, mid + half - pointx, mid);
-    ctx.bezierCurveTo(mid + anchor / 2, mid + anchor * 2, mid + anchor * 2, mid + anchor / 2, mid, mid + half);
-    ctx.bezierCurveTo(mid - anchor * 2, mid + anchor / 2, mid - anchor / 2, mid + anchor * 2, startx + pointx, starty);
-    ctx.closePath();
-    this.renderColor(ctx, style);
+    this.renderStyle(ctx, color, lineSize / scale, style);
+    ctx.scale(scale, scale);
+    ctx.translate(pathSize * 0.05 + glowSize * 0.5, pathSize * 0.05 + glowSize * 0.5);
+    this.renderColor(ctx, style, path);
     return canvas;
   };
   /**
@@ -1319,60 +1335,21 @@ var Sparticles = (function () {
 
 
   Sparticles.prototype.offScreenCanvas.star = function (style, color, canvas) {
+    var pathSize = 100;
+    var path = new Path2D("M99.86,36.45a2.94,2.94,0,0,0-2.37-2l-31-4.54L52.63,1.64a2.93,2.93,0,0,0-5.26,0L33.51,29.91l-31,4.54a3,3,0,0,0-2.37,2,3,3,0,0,0,.74,3l22.44,22L18,92.55A2.94,2.94,0,0,0,20.91,96a2.86,2.86,0,0,0,1.36-.34L50,81,77.73,95.66a2.91,2.91,0,0,0,3.08-.22A3,3,0,0,0,82,92.55l-5.3-31.07,22.44-22A3,3,0,0,0,99.86,36.45Z");
     var ctx = canvas.getContext("2d");
-    var size = 52;
+    var size = this.getOffscreenCanvasSize();
     var lineSize = this.getLineSize(size);
     var glowSize = this.getGlowSize(size);
     var canvasSize = size + lineSize * 2 + glowSize;
+    var scale = canvasSize / ((pathSize + glowSize) * 1.1);
     canvas.width = canvasSize;
     canvas.height = canvasSize;
+    ctx.scale(scale, scale);
     this.renderGlow(ctx, color, size);
-    this.renderStyle(ctx, color, lineSize, style);
-    ctx.translate(lineSize / 2 + glowSize / 2, lineSize / 2 + glowSize / 2 - 1);
-    ctx.beginPath();
-    ctx.moveTo(27.76, 2.07);
-    ctx.lineTo(34.28, 15.46);
-    ctx.translate(36.01480792437574, 14.614221385040288);
-    ctx.arc(0, 0, 1.93, 2.687967128721911, 1.7293919056045395, 1);
-    ctx.translate(-36.01480792437574, -14.614221385040288);
-    ctx.lineTo(50.37, 18.7);
-    ctx.translate(50.10443046629834, 20.601544851632347);
-    ctx.arc(0, 0, 1.92, -1.4320339785975214, 0.8159284165499665, 0);
-    ctx.translate(-50.10443046629834, -20.601544851632347);
-    ctx.lineTo(40.78, 32.36);
-    ctx.translate(42.13415324373887, 33.735197801216785);
-    ctx.arc(0, 0, 1.93, -2.3484841809999386, -3.3054346524687857, 1);
-    ctx.translate(-42.13415324373887, -33.735197801216785);
-    ctx.lineTo(42.7, 48.76);
-    ctx.translate(40.81489078457234, 49.06734873663269);
-    ctx.arc(0, 0, 1.91, -0.16161824093711977, 2.052504457600845, 0);
-    ctx.translate(-40.81489078457234, -49.06734873663269);
-    ctx.lineTo(26.83, 43.76);
-    ctx.translate(25.939999999999998, 45.438660180024534);
-    ctx.arc(0, 0, 1.9, -1.083293536758034, -2.0582991168317593, 1);
-    ctx.translate(-25.939999999999998, -45.438660180024534);
-    ctx.lineTo(11.92, 50.7);
-    ctx.translate(11.046023488962076, 49.00168758523234);
-    ctx.arc(0, 0, 1.91, 1.0955254432622383, 3.3002085355055915, 0);
-    ctx.translate(-11.046023488962076, -49.00168758523234);
-    ctx.lineTo(11.7, 34);
-    ctx.translate(9.820265754085725, 33.66132734870218);
-    ctx.arc(0, 0, 1.91, 0.178258078542773, -0.7933922953534395, 1);
-    ctx.translate(-9.820265754085725, -33.66132734870218);
-    ctx.lineTo(0.57, 21.85);
-    ctx.translate(1.9278161466350117, 20.478418681981545);
-    ctx.arc(0, 0, 1.93, 2.351151232528948, 4.5627030955491055, 0);
-    ctx.translate(-1.9278161466350117, -20.478418681981545);
-    ctx.lineTo(16.31, 16.47);
-    ctx.translate(16.062056630005188, 14.576161547207466);
-    ctx.arc(0, 0, 1.91, 1.4406156600933306, 0.4870016654036473, 1);
-    ctx.translate(-16.062056630005188, -14.576161547207466);
-    ctx.lineTo(24.33, 2.07);
-    ctx.translate(26.045, 2.9107585860400085);
-    ctx.arc(0, 0, 1.91, -2.6857849028374465, -0.45580775075234703, 0);
-    ctx.translate(-26.045, -2.9107585860400085);
-    ctx.closePath();
-    this.renderColor(ctx, style);
+    this.renderStyle(ctx, color, lineSize / scale, style);
+    ctx.translate(pathSize * 0.05 + glowSize * 0.5, pathSize * 0.05 + glowSize * 0.5);
+    this.renderColor(ctx, style, path);
     return canvas;
   };
   /**

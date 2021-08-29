@@ -1,10 +1,10 @@
 
 let colorType = {
-  type: "multi"
+  type: "single"
 };
 
 let colors = {
-  color1: "rgba(242,210,65,1)",
+  color1: "rgba(244,0,0,1)",
   color2: "rgba(252,248,230,1)",
   color3: "rgba(255,227,241,1)",
   color4: "rgba(230,248,255,1)"
@@ -13,13 +13,13 @@ let colors = {
 let options = {
   alphaSpeed: 3,
   alphaVariance: 8,
-  // color: [colors.color1, colors.color2, colors.color3, colors.color4],
-  randomColorCount: 3,
+  color: colors.color1,
+  randomColorCount: 7,
   composition: "source-over",
   bounce: false,
-  count: 10,
+  count: 200,
   direction: 180,
-  drift: 3,
+  drift: 0,
   glow: 0,
   imageUrl: [
     "./snowflake.png",
@@ -34,14 +34,14 @@ let options = {
     "./star.png"
   ],
   maxAlpha: 1,
-  maxSize: 30,
+  maxSize: 50,
   minAlpha: 1,
   minSize: 20,
-  parallax: 2,
+  parallax: 0,
   rotate: false,
   rotation: 0,
-  shape: ["wow"],
-  speed: 5,
+  shape: ["star"],
+  speed: 1,
   style: "both",
   twinkle: false,
   xVariance: 0,
@@ -155,8 +155,8 @@ window.initGui = function() {
   part.add(options, "bounce").onFinishChange(rerender);
   const image = part.addFolder("Image");
   // image.add(options, "imageUrl").onFinishChange(rerender);
-  part.add(options, "minSize", 1, 50, 1).onFinishChange(rerender);
-  part.add(options, "maxSize", 1, 50, 1).onFinishChange(rerender);
+  part.add(options, "minSize", 1, 250, 1).onFinishChange(rerender);
+  part.add(options, "maxSize", 1, 250, 1).onFinishChange(rerender);
   const anim = gui.addFolder("Animation");
   anim.add(options, "direction", 0, 360, 1).onFinishChange(rerender);
   anim.add(options, "speed", 0, 100, 0.1).onFinishChange(rerender);
