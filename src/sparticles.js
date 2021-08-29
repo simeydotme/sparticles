@@ -357,6 +357,14 @@ Sparticles.prototype.getLineSize = function(size) {
 };
 
 /**
+ * return the offscreenCanvas size to generate for
+ * @returns {Number} - the maxSize of the offscreen canvas
+ */
+Sparticles.prototype.getOffscreenCanvasSize = function() {
+  return clamp(this.settings.maxSize, this.settings.minSize, this.settings.maxSize);
+};
+
+/**
  * set the fill/stroke style (color & width) for each particle's offscreen canvas
  * @param {CanvasRenderingContext2D} ctx - the canvas context
  * @param {String} color - the color to fill/stroke with
@@ -433,7 +441,7 @@ Sparticles.prototype.offScreenCanvas = {};
  */
 Sparticles.prototype.offScreenCanvas.circle = function(style, color, canvas) {
   const ctx = canvas.getContext("2d");
-  const size = this.settings.maxSize;
+  const size = this.getOffscreenCanvasSize();
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
   const canvasSize = size + lineSize * 2 + glowSize;
@@ -458,7 +466,7 @@ Sparticles.prototype.offScreenCanvas.circle = function(style, color, canvas) {
  */
 Sparticles.prototype.offScreenCanvas.square = function(style, color, canvas) {
   const ctx = canvas.getContext("2d");
-  const size = this.settings.maxSize;
+  const size = this.getOffscreenCanvasSize();
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
   const canvasSize = size + lineSize * 2 + glowSize;
@@ -483,7 +491,7 @@ Sparticles.prototype.offScreenCanvas.square = function(style, color, canvas) {
  */
 Sparticles.prototype.offScreenCanvas.line = function(style, color, canvas) {
   const ctx = canvas.getContext("2d");
-  const size = this.settings.maxSize * 2;
+  const size = this.getOffscreenCanvasSize() * 1.5;
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
   const canvasSize = size + lineSize * 2 + glowSize;
@@ -512,7 +520,7 @@ Sparticles.prototype.offScreenCanvas.line = function(style, color, canvas) {
  */
 Sparticles.prototype.offScreenCanvas.triangle = function(style, color, canvas) {
   const ctx = canvas.getContext("2d");
-  const size = this.settings.maxSize;
+  const size = this.getOffscreenCanvasSize();
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
   const canvasSize = size + lineSize * 2 + glowSize;
@@ -547,7 +555,7 @@ Sparticles.prototype.offScreenCanvas.diamond = function(style, color, canvas) {
     "M43,83.74,48.63,99a1.46,1.46,0,0,0,2.74,0L57,83.74A45.09,45.09,0,0,1,83.74,57L99,51.37a1.46,1.46,0,0,0,0-2.74L83.74,43A45.11,45.11,0,0,1,57,16.26L51.37,1a1.46,1.46,0,0,0-2.74,0L43,16.26A45.11,45.11,0,0,1,16.26,43L1,48.63a1.46,1.46,0,0,0,0,2.74L16.26,57A45.09,45.09,0,0,1,43,83.74Z"
   );
   const ctx = canvas.getContext("2d");
-  const size = this.settings.maxSize;
+  const size = this.getOffscreenCanvasSize();
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
   const canvasSize = size + lineSize * 2 + glowSize;
@@ -576,7 +584,7 @@ Sparticles.prototype.offScreenCanvas.star = function(style, color, canvas) {
     "M99.86,36.45a2.94,2.94,0,0,0-2.37-2l-31-4.54L52.63,1.64a2.93,2.93,0,0,0-5.26,0L33.51,29.91l-31,4.54a3,3,0,0,0-2.37,2,3,3,0,0,0,.74,3l22.44,22L18,92.55A2.94,2.94,0,0,0,20.91,96a2.86,2.86,0,0,0,1.36-.34L50,81,77.73,95.66a2.91,2.91,0,0,0,3.08-.22A3,3,0,0,0,82,92.55l-5.3-31.07,22.44-22A3,3,0,0,0,99.86,36.45Z"
   );
   const ctx = canvas.getContext("2d");
-  const size = this.settings.maxSize;
+  const size = this.getOffscreenCanvasSize();
   const lineSize = this.getLineSize(size);
   const glowSize = this.getGlowSize(size);
   const canvasSize = size + lineSize * 2 + glowSize;
