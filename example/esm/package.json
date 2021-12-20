@@ -1,0 +1,12 @@
+{
+  "name": "sparticles-esm-test",
+  "version": "1.0.0",
+  "description": "test for importing sparticles to a browser esm setup",
+  "main": "esm.html",
+  "author": "me",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "sparticles": "../../"
+  }
+}

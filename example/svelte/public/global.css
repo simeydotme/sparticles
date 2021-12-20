@@ -42,3 +42,8 @@ nav a:active,
 nav a:focus {
   color: white;
 }
+
+canvas {
+  position: absolute;
+  inset: 0;
+}

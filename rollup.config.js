@@ -28,6 +28,12 @@ export default [
         plugins: [filesize()],
       },
       {
+        file: "dist/sparticles.mjs",
+        format: "esm",
+        banner: banner(),
+        plugins: [filesize()],
+      },
+      {
         name: "Sparticles",
         file: "dist/sparticles.js",
         format: "iife",

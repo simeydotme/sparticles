@@ -1,11 +1,12 @@
 {
   "name": "sparticles",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Lightweight, High Performance Particles in Canvas",
-  "main": "dist/sparticles.esm.js",
+  "main": "dist/sparticles.mjs",
   "files": [
     "dist/sparticles.js",
     "dist/sparticles.min.js",
+    "dist/sparticles.esm.js",
     "src/sparticles.js"
   ],
   "repository": "https://github.com/simeydotme/sparticles.git",
