@@ -17,7 +17,7 @@ let options = {
   randomColorCount: 7,
   composition: "source-over",
   bounce: false,
-  count: 200,
+  density: 200,
   direction: 180,
   drift: 0,
   glow: 0,
@@ -148,7 +148,7 @@ window.initGui = function() {
   const gui = new dat.GUI({ load: options });
   const part = gui.addFolder("Particles");
   part.open();
-  part.add(options, "count", 1, 500, 1).onFinishChange(rerender);
+  part.add(options, "density", 1, 500, 1).onFinishChange(rerender);
   part.add(options, "shape", shapes).onFinishChange(rerender);
   part.add(options, "style", styles).onFinishChange(rerender);
   part.add(options, "rotate").onFinishChange(rerender);

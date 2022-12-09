@@ -53,7 +53,7 @@ running this code in your javascript;
 <script>
   window.onload = function() {
     let myElement = document.getElementById("myDiv");
-    let mySparticles = new Sparticles(myElement, { count: 100 }, 400);
+    let mySparticles = new Sparticles(myElement, { density: 100 }, 400);
   }
 </script>
 ```
@@ -66,7 +66,7 @@ the third step with something like below;
 ```html
 <script>
   let $el = $("#myDiv");
-  let mySparticles = new Sparticles($el[0], { count: 100 }, 400);
+  let mySparticles = new Sparticles($el[0], { density: 100 }, 400);
 </script>
 ```
 
@@ -91,7 +91,7 @@ import Sparticles from "sparticles";
 3. Finally initialise with vanillaJS
 
 ```js
-new Sparticles(node, { count: 100 }, 400);
+new Sparticles(node, { density: 100 }, 400);
 ```
 
 4. If you're using SvelteJS specifically, then your single-file component
@@ -165,7 +165,7 @@ A brief look at all the options, with more details below.
 option                                     | type              | default         | description
 -------------------------------------------|-------------------|-----------------|-----------------------------------------------------
 **[composition](#composition)**            | `String`          | `source-over`   | canvas globalCompositeOperation value for particles
-**[count](#count)**                        | `Number`          | `50`            | number of particles on the canvas simultaneously
+**[density](#density)**                        | `Number`          | `50`            | density of particles on the canvas simultaneously (50 =~ 50 on a 1440 / 600 container)
 **[speed](#speed)**                        | `Number`          | `10`            | default velocity of every particle
 **[parallax](#parallax)**                  | `Number`          | `1`             | speed multiplier effect for larger particles (0 = none)
 **[direction](#direction)**                | `Number`          | `180`           | default direction of particles in degrees (0 = ↑, 180 = ↓)
@@ -203,12 +203,13 @@ other than the default value (`source-over`), and will ultimately degrade perfor
 
 Will accept [any of the values that are provided as part of the Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation)
 
-## `count`
+## `density`
 - Type: `Number`
 - Default: `50`
 - Range: `1 - 10000`
 
-Simply the number of particles drawn to the screen.  
+Density of particles drawn to the screen. Automatically recalculates particles count.
+50 is equivalent to 50 on a 1440 x 660 container.
 Values over `500` may begin to degrade performance.
 
 ## `speed`
@@ -531,8 +532,8 @@ of particles based on their device;
 ```js
   let myElement = document.getElementById("myDiv");
   // PLEASE DON'T PUSH A TON OF ANIMATION ON MOBILES!
-  let count = (/Mobi|Android/i.test(navigator.userAgent)) ? 100 : 500;
-  let mySparticles = new Sparticles(myElement, { count: count }, 400);
+  let density = (/Mobi|Android/i.test(navigator.userAgent)) ? 100 : 500;
+  let mySparticles = new Sparticles(myElement, { density: density }, 400);
 ```
 
 # why "Sparticles" ?
