@@ -702,13 +702,14 @@ var Sparticles = (function () {
     }
   };
 
+  var BASE_RESOLUTION = 1400 * 660;
   /**
    * Sparticles Constructor;
    * Create a <canvas>, append to the given node, and start the particle effect
    * @param {HTMLElement} [node=document.body] - element to which canvas is appended to
    * @param {Object} [options={}] - settings to use for the particle effect
    * @param {String} [options.composition=source-over] - canvas globalCompositeOperation value for particles
-   * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
+   * @param {Number} [options.density=50] - density of particles on the canvas simultaneously. 50 =~ 50 on a 1400 x 660 container
    * @param {Number} [options.speed=10] - default velocity of every particle
    * @param {Number} [options.parallax=1] - speed multiplier effect for larger particles (0 = none)
    * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
@@ -757,7 +758,7 @@ var Sparticles = (function () {
       randomColor: randomHsl,
       randomColorCount: 3,
       composition: "source-over",
-      count: 50,
+      density: 50,
       direction: 180,
       drift: 1,
       glow: 0,
@@ -893,6 +894,8 @@ var Sparticles = (function () {
 
       this.width = width || this.width;
       this.height = height || this.height;
+      this.resolution = this.width * this.height;
+      this.count = Math.ceil(this.resolution / BASE_RESOLUTION * this.settings.density);
       this.canvas.width = this.width;
       this.canvas.height = this.height;
       return this;
@@ -907,7 +910,7 @@ var Sparticles = (function () {
       this.sparticles = [];
       this.ctx.globalCompositeOperation = this.settings.composition;
 
-      for (var i = 0; i < this.settings.count; i++) {
+      for (var i = 0; i < this.count; i++) {
         this.sparticles.push(new Sparticle(this, i));
       }
 
