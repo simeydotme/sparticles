@@ -1,6 +1,6 @@
 {
   "name": "sparticles",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Lightweight, High Performance Particles in Canvas",
   "main": "dist/sparticles.mjs",
   "files": [
@@ -9,7 +9,10 @@
     "dist/sparticles.esm.js",
     "src/sparticles.js"
   ],
-  "repository": "https://github.com/simeydotme/sparticles.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simeydotme/sparticles.git"
+  },
   "author": "simeydotme <simey.me@gmail.com>",
   "homepage": "http://sparticlesjs.dev",
   "license": "MPL-2.0",
