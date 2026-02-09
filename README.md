@@ -641,19 +641,19 @@ the canvas:
     black 50%,
     transparent 100%
   );
+  mask-mode: alpha;
   -webkit-mask-image: radial-gradient(
     farthest-side,
     black 50%,
     transparent 100%
   );
+  -webkit-mask-mode: alpha;
 }
 ```
 
-- **`ellipse 80% 80%`** — Size of the visible circle (adjust to control how far from the center the fade starts).
-- **`at 50% 50%`** — Center of the gradient (use e.g. `50% 30%` to favour the top).
-- **`black 0%, transparent 70%`** — Black = visible, transparent = hidden; tweak the percentage to make the fade steeper or gentler.
-
-You can also use a circular mask with `circle` instead of `ellipse` if your container is square, or combine with `mask-size` / `mask-position` for more control.
+- **`mask-mode: alpha;`** — ensures the mask is applied as an alpha channel, not a color.
+- **`farthest-side`** — Size of the visible circle (adjust to control how far from the center the fade starts).
+- **`black 50%, transparent 100%`** — black = visible, transparent = hidden; tweak the percentage to make the fade steeper or gentler.
 
 # performance
 
