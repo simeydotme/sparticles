@@ -13,11 +13,13 @@ snow, or stars on your homepage!</sup>
 ---
 
 - [installation](#installation)
-- [Framework usage (Svelte 5, React, Vue)](#framework-usage-svelte-5-react-vue)
+- [framework usage (Svelte 5, React, Vue)](#framework-usage-svelte-5-react-vue)
 - [parameters](#parameters)
 - [options](#options)
 - [methods](#methods)
 - [styling](#styling)
+  - [placing in the page's background](#placing-the-sparticles-in-the-page-s-background)
+  - [fading out at the edges](#fading-particles-at-the-edges-radial-gradient-mask)
 - [performance](#performance)
 - [why?](#why-sparticles-)
 
@@ -583,6 +585,8 @@ styling that should be necessary is to set the width/height of the canvas [using
 
 ---
 
+## placing the Sparticles in the page's background
+
 To place the Sparticles in the background of a web-page, you'll need to add a
 container to the `<body>` which the canvas can sit in, then `position` it `fixed`:
 
@@ -598,33 +602,15 @@ container to the `<body>` which the canvas can sit in, then `position` it `fixed
 Then we set up the CSS styling for the Sparticles container depending on our
 situation:
 ```css
-/** 
-  * we need to make sure the background doesn't have a
-  * background color as we want to place the container
-  * behind it on the z-axis!
-  */
-html { background: black; }
-body { background: transparent; }
-
 .sparticles-container {
   position: fixed;
   left: 0; right: 0;
   top: 0; bottom: 0;
-  /**
-   * z-index: -1; this makes the <body> still interactive 
-   * by placing the sparticles behind the content
-   */
-  z-index: -1; 
-}
-/**
-* we could a;so use "pointer-events: none;" in
-* modern browsers to put the particles on top of all our content
-*/
-@supports ( pointer-events: none ) {
-  .sparticles-container {
-    z-index: 2;
-    pointer-events: none;
-  }
+
+  /** use z-index to position either above or behind the body content */
+  z-index: 2;
+  /** use pointer-events: none; to prevent the particles from blocking user interaction */
+  pointer-events: none;
 }
 ```
 
@@ -636,6 +622,38 @@ let mySparticles = new Sparticles( container, { color: "red" });
 // no need for width/height as the  canvas will fill 
 // the container which is fixed to the viewport size
 ```
+
+## fading particles at the edges (radial gradient mask)
+
+To make particles fade toward the edge of the canvas instead of clipping sharply, you can
+apply a **radial gradient mask** to the Sparticles container. The mask makes the center
+opaque and the edges transparent, so particles appear to soften and disappear as they
+approach the border.
+
+Add `mask-image` (and `-webkit-mask-image` for Safari) to the same container you use for
+the canvas:
+
+```css
+.sparticles-container {
+  /* Fade particles at the edges; center stays fully visible */
+  mask-image: radial-gradient(
+    farthest-side,
+    black 50%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    farthest-side,
+    black 50%,
+    transparent 100%
+  );
+}
+```
+
+- **`ellipse 80% 80%`** — Size of the visible circle (adjust to control how far from the center the fade starts).
+- **`at 50% 50%`** — Center of the gradient (use e.g. `50% 30%` to favour the top).
+- **`black 0%, transparent 70%`** — Black = visible, transparent = hidden; tweak the percentage to make the fade steeper or gentler.
+
+You can also use a circular mask with `circle` instead of `ellipse` if your container is square, or combine with `mask-size` / `mask-position` for more control.
 
 # performance
 
