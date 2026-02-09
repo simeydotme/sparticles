@@ -13,6 +13,7 @@ snow, or stars on your homepage!</sup>
 ---
 
 - [installation](#installation)
+- [Framework usage (Svelte 5, React, Vue)](#framework-usage-svelte-5-react-vue)
 - [parameters](#parameters)
 - [options](#options)
 - [methods](#methods)
@@ -88,32 +89,151 @@ npm install --save-dev sparticles
 import Sparticles from "sparticles";
 ```
 
-3. Finally initialise with vanillaJS
+3. Attach Sparticles to a DOM node when it's available (see [Framework usage](#framework-usage-svelte-5-react-vue) for Svelte 5, React, and Vue patterns):
 
 ```js
 new Sparticles(node, { count: 100 }, 400);
 ```
 
-4. If you're using SvelteJS specifically, then your single-file component
-would look a little like this;
+# framework usage (Svelte 5, React, Vue)
+
+Use a **ref** to the container element, create the Sparticles instance when the ref is mounted, and **destroy** it on cleanup so the canvas is removed and listeners are freed.
+
+## Svelte 5
+
+Bind to the container with `bind:this`, create Sparticles in `onMount`, and destroy in `onDestroy`:
 
 ```html
 <script>
-
+  import { onMount, onDestroy } from "svelte";
   import Sparticles from "sparticles";
 
-  let sparticles,
-      options = { color: "gold", shape: "star", speed: 50 };
+  let container;
+  let sparticles;
 
-  function addSparticles(node) {
-    new Sparticles(node, options, 400);
-  }
+  onMount(() => {
+    if (container) {
+      sparticles = new Sparticles(container, { count: 100, color: "gold" });
+    }
+  });
 
+  onDestroy(() => {
+    if (sparticles) {
+      sparticles.destroy();
+    }
+  });
 </script>
 
-<main use:addSparticles>
-</main>
+<div bind:this={container} class="sparticles-wrap"></div>
 ```
+
+Or use an **action** so init and cleanup stay in one place:
+
+```html
+<script>
+  import Sparticles from "sparticles";
+
+  function sparticles(node, options = {}) {
+    const instance = new Sparticles(node, options);
+    return {
+      destroy() {
+        instance.destroy();
+      },
+    };
+  }
+</script>
+
+<div use:sparticles={{ count: 100, color: "gold" }} class="sparticles-wrap"></div>
+```
+
+## React
+
+Use a **ref** for the container and **useEffect** to create on mount and destroy on unmount:
+
+```jsx
+import { useRef, useEffect } from "react";
+import Sparticles from "sparticles";
+
+export function ParticleBackground() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const instance = new Sparticles(containerRef.current, { count: 100 });
+    return () => instance.destroy();
+  }, []);
+
+  return <div ref={containerRef} className="sparticles-wrap" />;
+}
+```
+
+If you need to react to option changes, depend on them in the effect and destroy/create on change:
+
+```jsx
+useEffect(() => {
+  if (!containerRef.current) return;
+  const instance = new Sparticles(containerRef.current, options);
+  return () => instance.destroy();
+}, [options.count, options.speed /* etc. */]);
+```
+
+## Vue 3
+
+Use a **ref** for the container, create Sparticles in **onMounted**, and destroy in **onUnmounted**:
+
+```vue
+<script setup>
+import { ref, onMounted, onUnmounted } from "vue";
+import Sparticles from "sparticles";
+
+const container = ref(null);
+let instance = null;
+
+onMounted(() => {
+  if (container.value) {
+    instance = new Sparticles(container.value, { count: 100 });
+  }
+});
+
+onUnmounted(() => {
+  if (instance) {
+    instance.destroy();
+  }
+});
+</script>
+
+<template>
+  <div ref="container" class="sparticles-wrap"></div>
+</template>
+```
+
+With **Options API**, use a container ref and `mounted` / `beforeUnmount`:
+
+```vue
+<script>
+import Sparticles from "sparticles";
+
+export default {
+  data() {
+    return { instance: null };
+  },
+  mounted() {
+    if (this.$refs.container) {
+      this.instance = new Sparticles(this.$refs.container, { count: 100 });
+    }
+  },
+  beforeUnmount() {
+    if (this.instance) this.instance.destroy();
+  },
+};
+</script>
+
+<template>
+  <div ref="container" class="sparticles-wrap"></div>
+</template>
+```
+
+---
 
 # usage
 
@@ -127,12 +247,12 @@ let mySparticles = new Sparticles();
 
 When initialising the Sparticles instance there are some parameters that can be supplied.
 
-parameter                   | type               | default            | description
-----------------------------|--------------------|--------------------|-----------------------------------------------------------
-**node**                    | `HTMLElement`      | `document.body`    | the element in the DOM which the Sparticles will append to
-**[options](#options)**     | `Object`           | `{}`               | an object with [all the options for the instance](#options)
-**width**                   | `Number`           | `node.clientWidth` | the width of the canvas element
-**height**                  | `Number`           | `node.clientWidth` | the height of the canvas element (defaults to width)
+| parameter               | type          | default            | description                                                 |
+| ----------------------- | ------------- | ------------------ | ----------------------------------------------------------- |
+| **node**                | `HTMLElement` | `document.body`    | the element in the DOM which the Sparticles will append to  |
+| **[options](#options)** | `Object`      | `{}`               | an object with [all the options for the instance](#options) |
+| **width**               | `Number`      | `node.clientWidth` | the width of the canvas element                             |
+| **height**              | `Number`      | `node.clientWidth` | the height of the canvas element (defaults to width)        |
 
 <sup>Leave the `width`/`height` properties empty to make the canvas resize to fit it's `node`</sup>
 
@@ -162,33 +282,36 @@ let mySparticles = new Sparticles({ color: "red" }, 400, 300);
 
 A brief look at all the options, with more details below.
 
-option                                     | type              | default         | description
--------------------------------------------|-------------------|-----------------|-----------------------------------------------------
-**[composition](#composition)**            | `String`          | `source-over`   | canvas globalCompositeOperation value for particles
-**[count](#count)**                        | `Number`          | `50`            | number of particles on the canvas simultaneously
-**[speed](#speed)**                        | `Number`          | `10`            | default velocity of every particle
-**[parallax](#parallax)**                  | `Number`          | `1`             | speed multiplier effect for larger particles (0 = none)
-**[direction](#direction)**                | `Number`          | `180`           | default direction of particles in degrees (0 = ↑, 180 = ↓)
-**[xVariance](#xVariance)**                | `Number`          | `2`             | random deviation of particles on x-axis from default direction
-**[yVariance](#yVariance)**                | `Number`          | `2`             | random deviation of particles on y-axis from default direction
-**[rotate](#rotate)**                      | `Boolean`         | `true`          | can particles rotate
-**[rotation](#rotation)**                  | `Number`          | `1`             | default rotational speed for every particle
-**[alphaSpeed](#alphaSpeed)**              | `Number`          | `10`            | rate of change in alpha over time
-**[alphaVariance](#alphaVariance)**        | `Number`          | `1`             | random deviation of alpha change
-**[minAlpha](#minAlpha)**                  | `Number`          | `0`             | minumum alpha value of every particle
-**[maxAlpha](#maxAlpha)**                  | `Number`          | `1`             | maximum alpha value of every particle
-**[minSize](#minSize)**                    | `Number`          | `1`             | minimum size of every particle
-**[maxSize](#maxSize)**                    | `Number`          | `10`            | maximum size of every particle
-**[bounce](#bounce)**                      | `Boolean`         | `false`         | should the particles bounce off edge of canvas
-**[drift](#drift)**                        | `Number`          | `1`             | the "driftiness" of particles which have a horizontal/vertical direction
-**[glow](#glow)**                          | `Number`          | `0`             | the glow effect size of each particle
-**[twinkle](#twinkle)**                    | `Boolean`         | `false`         | particles to exhibit an alternative alpha transition as "twinkling"
-**[style](#style)**                        | `String`          | `fill`          | fill style of particles (one of; "fill", "stroke" or "both")
-**[shape](#shape)**                        | `String`/`Array`  | `circle`        | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"
-**[color](#color)**                        | `String`/`Array`  | `random`        | css color as string, or array of color strings (can also be "random")
-**[randomColor](#randomColor)**            | `Function`        | `randomHsl()`   | function for returning a random color when the color is set as "random"
-**[randomColorCount](#randomColorCount)**  | `Number`          | `3`             | number of random colours when the color is set as "random"
-**[imageUrl](#imageUrl)**                  | `String`/`Array`  |                 | if shape is "image", define an image url (can be data-uri, **should be square (1:1 ratio)**)
+| option                                    | type             | default       | description                                                                                  |
+| ----------------------------------------- | ---------------- | ------------- | -------------------------------------------------------------------------------------------- |
+| **[composition](#composition)**           | `String`         | `source-over` | canvas `globalCompositeOperation` value for particles                                          |
+| **[count](#count)**                       | `Number`         | `50`          | number of particles on the canvas simultaneously                                             |
+| **[speed](#speed)**                       | `Number`         | `10`          | default velocity of every particle                                                           |
+| **[parallax](#parallax)**                 | `Number`         | `0`           | strength of size-based speed variation 0–100 (0 = off; smaller slower, larger faster)        |
+| **[direction](#direction)**               | `Number`         | `180`         | default direction in degrees (0 = ↑, 180 = ↓); ignored when `spawnFromCenter` is true          |
+| **[xVariance](#xVariance)**               | `Number`         | `2`           | random deviation of particles on x-axis from default direction                               |
+| **[yVariance](#yVariance)**               | `Number`         | `2`           | random deviation of particles on y-axis from default direction                               |
+| **[rotate](#rotate)**                     | `Boolean`        | `true`        | can particles rotate                                                                         |
+| **[rotation](#rotation)**                 | `Number`         | `1`           | default rotational speed for every particle                                                  |
+| **[alphaSpeed](#alphaSpeed)**             | `Number`         | `10`          | rate of change in alpha over time                                                            |
+| **[alphaVariance](#alphaVariance)**       | `Number`         | `1`           | random deviation of alpha change                                                             |
+| **[minAlpha](#minAlpha)**                 | `Number`         | `0`           | minumum alpha value of every particle                                                        |
+| **[maxAlpha](#maxAlpha)**                 | `Number`         | `1`           | maximum alpha value of every particle                                                        |
+| **[minSize](#minSize)**                   | `Number`         | `1`           | minimum size of every particle                                                               |
+| **[maxSize](#maxSize)**                   | `Number`         | `10`          | maximum size of every particle                                                               |
+| **[bounce](#bounce)**                     | `Boolean`        | `false`       | should the particles bounce off edge of canvas                                               |
+| **[drift](#drift)**                       | `Number`         | `1`           | the "driftiness" of particles which have a horizontal/vertical direction                     |
+| **[glow](#glow)**                         | `Number`         | `0`           | the glow effect size of each particle                                                        |
+| **[twinkle](#twinkle)**                   | `Boolean`        | `false`       | particles to exhibit an alternative alpha transition as "twinkling"                          |
+| **[style](#style)**                       | `String`         | `fill`        | fill style of particles (one of; `fill`, `stroke` or `both`)                                 |
+| **[shape](#shape)**                       | `String`/`Array` | `circle`      | shape of particles (any of; circle, square, triangle, diamond, line, image) or "random"      |
+| **[color](#color)**                       | `String`/`Array` | `random`      | css color as string, or array of color strings (can also be `random`)                        |
+| **[randomColor](#randomColor)**           | `Function`       | `randomHsl()` | function for returning a random color when the color is set as `random`                      |
+| **[randomColorCount](#randomColorCount)** | `Number`         | `3`           | number of random colours when the color is set as `random`                                   |
+| **[spawnFromCenter](#spawnFromCenter)**   | `Boolean`        | `false`       | when `true`, particles spawn in a circle at center and move radially outward                   |
+| **[spawnArea](#spawnArea)**               | `Number`         | `20`          | spawn circle diameter as % of canvas width (0–90) when `spawnFromCenter` is true               |
+| **[staggerSpawn](#staggerSpawn)**         | `Number`         | `0`           | when `> 0` and `spawnFromCenter`, staggers initial spawns over this many seconds        |
+| **[imageUrl](#imageUrl)**                 | `String`/`Array` |               | if shape is `image`, define an image url (can be data-uri, **should be square (1:1 ratio)**) |
 
 ---
 
@@ -222,18 +345,17 @@ A speed of `0` will render particles stationary before applying `[x/y]Variance`.
 
 ## `parallax`
 - Type: `Number`
-- Default: `1`
-- Range: `0 - 20`
+- Default: `0`
+- Range: `0 - 100`
 
-A value to apply more speed to larger particles, and less speed to smaller particles, creating
-an effect which makes larger particles appear closer to the screen.
+Strength of size-based speed variation. When `0`, parallax is off and all particles use the base speed. When set, particles smaller than the median size (between `minSize` and `maxSize`) move slower, and larger particles move faster, simulating near/far depth. The average speed stays stable when you change parallax, so the `speed` option remains the main control. Values around 50 give a moderate effect; 100 gives strong variation (e.g. double size ≈ double speed).
 
 ## `direction`
 - Type: `Number`
 - Default: `180`
 - Range: `0 - 360`
 
-The base angle (in degrees) at which the particles are travelling, so long as they have a speed value.
+The base angle (in degrees) at which the particles are travelling, so long as they have a speed value. Ignored when [spawnFromCenter](#spawnFromCenter) is true.
 
 ## `xVariance`
 - Type: `Number`
@@ -343,7 +465,27 @@ This is best used with `speed: 0;` and a high value for `[x/yVariance]` to creat
 - Range: `1 - 20`
 
 How much a particle will "drift" as it falls. This is to imply a floatiness/wind effect like seen with snow flakes,
-or leaves. The `drift` will only apply if `speed > 0` and `direction` is near to a 90degree value (`0, 90, 180, 270`)
+or leaves. The `drift` will only apply if `speed > 0` and `direction` is near to a 90degree value (`0, 90, 180, 270`). When [spawnFromCenter](#spawnFromCenter) is true, drift is applied perpendicular to each particle’s radial direction (side-to-side in the particle’s own frame).
+
+## `spawnFromCenter`
+- Type: `Boolean`
+- Default: `false`
+
+When `true`, particles spawn at a random position inside a circle at the center of the canvas and move **radially outward**. The global [direction](#direction) option is ignored; each particle’s direction is set by its spawn position. Other options (speed, parallax, variance, rotation, drift, bounce, etc.) still apply. Drift is applied perpendicular to the direction of travel. Particles start at 0 opacity and fade in to their initial alpha as they move away, using each particle’s alpha delta for the fade-in rate.
+
+## `spawnArea`
+- Type: `Number`
+- Default: `20`
+- Range: `0 - 90` (percentage of canvas width)
+
+Size of the spawn circle as a **percentage of the canvas width** when [spawnFromCenter](#spawnFromCenter) is true. Values are clamped between 0 and 90. For example, `20` means the circle’s diameter is 20% of the canvas width. New particles (and respawned particles that have gone off-canvas) appear at a random point inside this circle.
+
+## `staggerSpawn`
+- Type: `Number`
+- Default: `0`
+- Range: `0 - …` (seconds)
+
+When greater than 0 (and [spawnFromCenter](#spawnFromCenter) is true), the initial particles are **linearly staggered** over this many seconds instead of all appearing at once. For a given `count`, each particle gets a spawn time evenly distributed between `0` and `staggerSpawn`, and will begin moving/fading in only after its own time has passed. Resets after going off-canvas are not staggered; they respawn immediately.
 
 ## `glow`
 - Type: `Number`
@@ -427,11 +569,11 @@ let mySparticles = new Sparticles();
 mySparticles.destroy();
 ```
 
-method                                                   | description
----------------------------------------------------------|------------------------------------------------------
-**[destroy()](#destroy)**                                | destroy the Sparticles instance and remove event listeners
-**[setCanvasSize( width, height )](#setCanvasSize)**     | set the new size of the canvas
-**[resetSparticles()](#resetSparticles)**                | reset all the particles on the canvas
+| method                                               | description                                                |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| **[destroy()](#destroy)**                            | destroy the Sparticles instance and remove event listeners |
+| **[setCanvasSize( width, height )](#setCanvasSize)** | set the new size of the canvas                             |
+| **[resetSparticles()](#resetSparticles)**            | reset all the particles on the canvas                      |
 
 # styling
 

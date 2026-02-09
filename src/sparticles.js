@@ -10,11 +10,11 @@ import { Sparticle } from "./sparticle.js";
  * @param {String} [options.composition=source-over] - canvas globalCompositeOperation value for particles
  * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
  * @param {Number} [options.speed=10] - default velocity of every particle
- * @param {Number} [options.parallax=1] - speed multiplier effect for larger particles (0 = none)
- * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
+ * @param {Number} [options.parallax=0] - strength of size-based speed variation 0–100 (0 = none; smaller particles slower, larger faster)
+ * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓); ignored when spawnFromCenter is true
  * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
  * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
- * @param {Number} [options.rotate=true] - can particles rotate
+ * @param {Boolean} [options.rotate=true] - can particles rotate
  * @param {Number} [options.rotation=1] - default rotational speed for every particle
  * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
  * @param {Number} [options.alphaVariance=1] - random deviation of alpha change
@@ -32,6 +32,9 @@ import { Sparticle } from "./sparticle.js";
  * @param {(String|String[])} [options.color=random] - css color as string, or array of color strings (can also be "random")
  * @param {Function} [options.randomColor=randomHsl(index,total)] - a custom function for setting the random colors when color="random"
  * @param {Number} [options.randomColorCount=3] - the number of random colors to generate when color is "random"
+ * @param {Boolean} [options.spawnFromCenter=false] - when true, particles spawn in a circle at center and move radially outward (direction ignored)
+ * @param {Number} [options.spawnArea=20] - spawn circle diameter as % of canvas width (0–90), when spawnFromCenter is true
+ * @param {Number} [options.staggerSpawn=0] - when >0 and spawnFromCenter, linearly staggers initial spawns over this many seconds (0 = all spawn together)
  * @param {Number} [width] - the width of the canvas element
  * @param {Number} [height=width] - the height of the canvas element
  * @returns {Object} - reference to a new Sparticles instance
@@ -63,8 +66,11 @@ const Sparticles = function(node, options, width, height) {
     maxSize: 10,
     minAlpha: 0,
     minSize: 1,
-    parallax: 1,
+    parallax: 0,
     rotate: true,
+    spawnArea: 20,
+    spawnFromCenter: false,
+    staggerSpawn: 0,
     rotation: 1,
     shape: "circle",
     speed: 10,
@@ -78,6 +84,7 @@ const Sparticles = function(node, options, width, height) {
   this.resizable = !width && !height;
   this.width = this.resizable ? this.el.clientWidth : width;
   this.height = this.resizable ? this.el.clientHeight : height;
+  this.time = 0;
 
   /**
    * initialise the sparticles instance
@@ -186,6 +193,7 @@ const Sparticles = function(node, options, width, height) {
    */
   this.resetSparticles = this.createSparticles = function() {
     this.sparticles = [];
+    this.time = 0;
     this.ctx.globalCompositeOperation = this.settings.composition;
     for (let i = 0; i < this.settings.count; i++) {
       this.sparticles.push(new Sparticle(this, i));
@@ -620,13 +628,17 @@ Sparticles.prototype.drawOffscreenCanvasForImage = function(image, color, canvas
 };
 
 /**
+ * - progress the time since the last frame
  * - wipe the canvas,
  * - update each sparticle,
  * - render each sparticle
  * - sort so that larger particles on top
  * @returns {Array} the array of Sparticle instances
  */
-Sparticles.prototype.drawFrame = function() {
+Sparticles.prototype.drawFrame = function(t) {
+  if (typeof t === "number") {
+    this.time += t / 1000;
+  }
   this.ctx.clearRect(0, 0, this.width, this.height);
   for (let i = 0; i < this.sparticles.length; i++) {
     let sparticle = this.sparticles[i];

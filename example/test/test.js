@@ -42,6 +42,9 @@ let options = {
   rotation: 0,
   shape: ["star"],
   speed: 1,
+  spawnArea: 20,
+  spawnFromCenter: false,
+  staggerSpawn: 0,
   style: "both",
   twinkle: false,
   xVariance: 0,
@@ -160,12 +163,16 @@ window.initGui = function() {
   const anim = gui.addFolder("Animation");
   anim.add(options, "direction", 0, 360, 1).onFinishChange(rerender);
   anim.add(options, "speed", 0, 100, 0.1).onFinishChange(rerender);
-  anim.add(options, "rotation", 0, 100, 0.1).onFinishChange(rerender);
+  anim.add(options, "rotation", 0, 20, 0.1).onFinishChange(rerender);
   const move = anim.addFolder("Movement");
-  move.add(options, "parallax", 0, 10, 0.1).onFinishChange(rerender);
+  move.add(options, "parallax", 0, 100, 1).onFinishChange(rerender);
   move.add(options, "drift", 0, 30, 0.01).onFinishChange(rerender);
   move.add(options, "xVariance", 0, 20, 0.1).onFinishChange(rerender);
   move.add(options, "yVariance", 0, 20, 0.1).onFinishChange(rerender);
+  const spawn = anim.addFolder("From center");
+  spawn.add(options, "spawnFromCenter").onFinishChange(rerender);
+  spawn.add(options, "spawnArea", 0, 90, 1).onFinishChange(rerender);
+  spawn.add(options, "staggerSpawn", 0, 20, 0.1).onFinishChange(rerender);
   const vis = gui.addFolder("Visual");
   vis.add(options, "glow", 0,150).onFinishChange(rerender);
   vis.add(options, "composition", composites).onFinishChange(rerender);

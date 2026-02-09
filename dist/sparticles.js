@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 1.3.1
+ * @version 2.0.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -210,17 +210,22 @@ var Sparticles = (function () {
    * Sparticle Constructor;
    * creates an individual particle for use in the Sparticles() class
    * @param {Object} parent - the parent Sparticles() instance this belongs to
+   * @param {Number} index - index of this particle in the parent's array
    * @returns {Object} - reference to a new Sparticle instance
    */
 
-  var Sparticle = function Sparticle(parent) {
+  var Sparticle = function Sparticle(parent, index) {
     if (parent) {
+      this.parent = parent;
       this.canvas = parent.canvas;
       this.settings = parent.settings;
       this.colors = parent.colors;
       this.shapes = parent.shapes;
       this.images = parent.images;
       this.styles = parent.styles;
+      this.index = typeof index === "number" ? index : 0;
+      this.spawnAt = 0;
+      this.hasSpawned = !(this.settings.spawnFromCenter && this.settings.staggerSpawn > 0);
       this.ctx = parent.canvas.getContext("2d");
       this.setup();
       this.init();
@@ -255,6 +260,44 @@ var Sparticles = (function () {
     this.horizontal = _.direction > 60 && _.direction < 120 || _.direction > 240 && _.direction < 300;
   };
   /**
+   * set position to a random point in the center spawn circle, set outwardAngle,
+   * dx/dy for radial motion, and alpha/targetAlpha for fade-in. Used when
+   * spawnFromCenter is true (from init and reset).
+   */
+
+
+  Sparticle.prototype.setPositionAndVelocityFromCenter = function () {
+    var _ = this.settings;
+    var canvas = this.canvas;
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+    var pct = clamp(_.spawnArea != null ? _.spawnArea : 20, 0, 90);
+    var diameter = pct / 100 * canvas.width;
+    var rMax = diameter / 2;
+    var angle = random(0, 2 * Math.PI);
+    var r = random(0, rMax);
+    this.px = cx + r * Math.cos(angle);
+    this.py = cy + r * Math.sin(angle);
+    this.outwardAngle = 90 + 180 / Math.PI * Math.atan2(this.py - cy, this.px - cx);
+    this.dx = this.getDeltaX();
+    this.dy = this.getDeltaY();
+    this.alpha = 0;
+    this.targetAlpha = random(_.minAlpha, _.maxAlpha);
+    this.fadeInComplete = false;
+
+    if (_.spawnFromCenter && _.staggerSpawn > 0 && !this.hasSpawned) {
+      // initial spawn only: use settings.count for linear distribution over staggerSpawn seconds
+      var count = _.count || 1;
+      var steps = Math.max(count - 1, 1);
+      var fraction = this.index / steps;
+      this.spawnAt = fraction * _.staggerSpawn;
+      this.hasSpawned = false;
+    } else {
+      this.spawnAt = 0;
+      this.hasSpawned = true;
+    }
+  };
+  /**
    * initialise a particle with the default values from
    * the Sparticles instance settings.
    * these values do not change when the particle goes offscreen
@@ -268,6 +311,11 @@ var Sparticles = (function () {
 
     if (_.speed > 0 || _.alphaSpeed === 0) {
       this.alpha = random(_.minAlpha, _.maxAlpha);
+    }
+
+    if (_.spawnFromCenter) {
+      this.setPositionAndVelocityFromCenter();
+      return;
     }
 
     if (_.bounce) {
@@ -287,7 +335,15 @@ var Sparticles = (function () {
 
   Sparticle.prototype.reset = function () {
     // give the particle a new set of initial values
-    this.setup(); // set the particle's Y position
+    this.setup();
+
+    if (this.settings.spawnFromCenter) {
+      this.hasSpawned = true;
+      this.spawnAt = 0;
+      this.setPositionAndVelocityFromCenter();
+      return;
+    } // set the particle's Y position
+
 
     if (this.py < 0) {
       this.py = this.canvas.height + this.size * 2;
@@ -412,7 +468,9 @@ var Sparticles = (function () {
   };
   /**
    * get a random delta (velocity) for the particle
-   * based on the speed, and the parallax value (if applicable)
+   * based on the speed, and the parallax value (if applicable).
+   * Parallax is multiplicative: smaller-than-median particles move slower,
+   * larger move faster; average speed stays stable when parallax changes.
    * @returns {Number} - the velocity to be applied to the particle
    */
 
@@ -420,11 +478,13 @@ var Sparticles = (function () {
   Sparticle.prototype.getDelta = function () {
     var baseDelta = this.settings.speed * 0.1;
 
-    if (this.settings.speed && this.settings.parallax) {
-      return baseDelta + this.size * this.settings.parallax / 50;
-    } else {
+    if (!this.settings.speed || !this.settings.parallax) {
       return baseDelta;
     }
+
+    var referenceSize = (this.settings.minSize + this.settings.maxSize) / 2;
+    var parallaxMultiplier = 1 + this.settings.parallax / 100 * (this.size / referenceSize - 1);
+    return baseDelta * parallaxMultiplier;
   };
   /**
    * get a random variable speed for use as a multiplier,
@@ -445,6 +505,20 @@ var Sparticles = (function () {
     }
   };
   /**
+   * get the direction angle in degrees for this particle (global direction
+   * or per-particle outward angle when spawnFromCenter).
+   * @returns {Number} - angle in degrees (0 = up)
+   */
+
+
+  Sparticle.prototype.getDirectionAngle = function () {
+    if (this.settings.spawnFromCenter && this.outwardAngle != null) {
+      return this.outwardAngle;
+    }
+
+    return this.settings.direction;
+  };
+  /**
    * get a random delta on the X axis, taking in to account
    * the variance range in the settings object and the particle's
    * direction as a multiplier
@@ -455,7 +529,7 @@ var Sparticles = (function () {
   Sparticle.prototype.getDeltaX = function () {
     var d = this.getDelta();
     var dv = this.getDeltaVariance(this.settings.xVariance);
-    return cartesian(this.settings.direction)[0] * d + dv;
+    return cartesian(this.getDirectionAngle())[0] * d + dv;
   };
   /**
    * get a random delta on the Y axis, taking in to account
@@ -468,7 +542,7 @@ var Sparticles = (function () {
   Sparticle.prototype.getDeltaY = function () {
     var d = this.getDelta();
     var dv = this.getDeltaVariance(this.settings.yVariance);
-    return cartesian(this.settings.direction)[1] * d + dv;
+    return cartesian(this.getDirectionAngle())[1] * d + dv;
   };
   /**
    * get a random delta for the alpha change over time from
@@ -501,7 +575,8 @@ var Sparticles = (function () {
     }
   };
   /**
-   * return a random rotation value either positive or negative
+   * return a random rotation value either positive or negative.
+   * Rotation is scaled by 0.5 so the 0–20 range gives a gentler spin.
    * @returns {Number} - the rotation value
    */
 
@@ -510,7 +585,7 @@ var Sparticles = (function () {
     var r = 0;
 
     if (this.settings.rotate && this.settings.rotation) {
-      r = radian(random(0.5, 1.5) * this.settings.rotation);
+      r = radian(random(0.5, 1.5) * this.settings.rotation * 0.5);
 
       if (roll(1 / 2)) {
         r = -r;
@@ -529,20 +604,48 @@ var Sparticles = (function () {
 
   Sparticle.prototype.update = function () {
     this.frame += 1;
+    var stagger = this.settings.spawnFromCenter && this.settings.staggerSpawn > 0 && !this.hasSpawned;
+
+    if (stagger && this.parent && typeof this.parent.time === "number") {
+      var time = this.parent.time;
+
+      if (time < this.spawnAt) {
+        // not yet spawned; keep invisible and stationary
+        this.alpha = 0;
+        return this;
+      }
+
+      this.hasSpawned = true;
+    }
+
     this.updatePosition();
     this.updateAlpha();
     return this;
   };
   /**
    * progress the particle's alpha value depending on the
-   * alphaSpeed and the twinkle setting
+   * alphaSpeed and the twinkle setting. When spawnFromCenter,
+   * particles fade in from 0 to targetAlpha using da before normal alpha behavior.
    * @returns {Number} - new alpha value of the particle
    */
 
 
   Sparticle.prototype.updateAlpha = function () {
-    if (this.settings.alphaSpeed > 0) {
-      if (this.settings.twinkle) {
+    var _ = this.settings; // Fade-in from spawn only until we've reached targetAlpha once; then use normal fade/twinkle
+
+    if (_.spawnFromCenter && this.targetAlpha != null && !this.fadeInComplete && this.alpha < this.targetAlpha) {
+      var fadeInTick = Math.abs(this.da) / 1000 * (_.alphaSpeed || 1) * 0.5;
+      this.alpha = Math.min(this.targetAlpha, this.alpha + fadeInTick);
+
+      if (this.alpha >= this.targetAlpha) {
+        this.fadeInComplete = true;
+      }
+
+      return this.alpha;
+    }
+
+    if (_.alphaSpeed > 0) {
+      if (_.twinkle) {
         this.alpha = this.updateTwinkle();
       } else {
         this.alpha = this.updateFade();
@@ -652,22 +755,34 @@ var Sparticles = (function () {
   };
   /**
    * progress the particle's drift value according
-   * to the settings given
+   * to the settings given. For spawnFromCenter, drift is applied
+   * perpendicular to the direction of travel (particle's own frame).
    */
 
 
   Sparticle.prototype.updateDrift = function () {
     var _ = this.settings;
-    var dir = _.direction;
 
-    if (_.drift && _.speed) {
-      if (this.vertical) {
-        // apply HORIZONTAL drift ~ when "direction" is mostly vertical.
-        this.px += cartesian(this.frame + this.frameoffset)[0] * this.dd / (this.getDelta() * 15);
-      } else if (this.horizontal) {
-        // apply VERTICAL drift ~ when "direction" is mostly horizontal.
-        this.py += cartesian(this.frame + this.frameoffset)[1] * this.dd / (this.getDelta() * 15);
-      }
+    if (!_.drift || !_.speed) {
+      return;
+    }
+
+    var wave = cartesian(this.frame + this.frameoffset)[0] * this.dd / (this.getDelta() * 15);
+
+    if (_.spawnFromCenter && this.outwardAngle != null) {
+      // drift perpendicular to radial direction (tangent to circle)
+      var perp = cartesian(this.outwardAngle + 90);
+      this.px += wave * perp[0];
+      this.py += wave * perp[1];
+      return;
+    }
+
+    if (this.vertical) {
+      // apply HORIZONTAL drift ~ when "direction" is mostly vertical.
+      this.px += wave;
+    } else if (this.horizontal) {
+      // apply VERTICAL drift ~ when "direction" is mostly horizontal.
+      this.py += cartesian(this.frame + this.frameoffset)[1] * this.dd / (this.getDelta() * 15);
     }
   };
 
@@ -710,11 +825,11 @@ var Sparticles = (function () {
    * @param {String} [options.composition=source-over] - canvas globalCompositeOperation value for particles
    * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
    * @param {Number} [options.speed=10] - default velocity of every particle
-   * @param {Number} [options.parallax=1] - speed multiplier effect for larger particles (0 = none)
-   * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓)
+   * @param {Number} [options.parallax=0] - strength of size-based speed variation 0–100 (0 = none; smaller particles slower, larger faster)
+   * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓); ignored when spawnFromCenter is true
    * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
    * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
-   * @param {Number} [options.rotate=true] - can particles rotate
+   * @param {Boolean} [options.rotate=true] - can particles rotate
    * @param {Number} [options.rotation=1] - default rotational speed for every particle
    * @param {Number} [options.alphaSpeed=10] - rate of change in alpha over time
    * @param {Number} [options.alphaVariance=1] - random deviation of alpha change
@@ -732,6 +847,9 @@ var Sparticles = (function () {
    * @param {(String|String[])} [options.color=random] - css color as string, or array of color strings (can also be "random")
    * @param {Function} [options.randomColor=randomHsl(index,total)] - a custom function for setting the random colors when color="random"
    * @param {Number} [options.randomColorCount=3] - the number of random colors to generate when color is "random"
+   * @param {Boolean} [options.spawnFromCenter=false] - when true, particles spawn in a circle at center and move radially outward (direction ignored)
+   * @param {Number} [options.spawnArea=20] - spawn circle diameter as % of canvas width (0–90), when spawnFromCenter is true
+   * @param {Number} [options.staggerSpawn=0] - when >0 and spawnFromCenter, linearly staggers initial spawns over this many seconds (0 = all spawn together)
    * @param {Number} [width] - the width of the canvas element
    * @param {Number} [height=width] - the height of the canvas element
    * @returns {Object} - reference to a new Sparticles instance
@@ -766,8 +884,11 @@ var Sparticles = (function () {
       maxSize: 10,
       minAlpha: 0,
       minSize: 1,
-      parallax: 1,
+      parallax: 0,
       rotate: true,
+      spawnArea: 20,
+      spawnFromCenter: false,
+      staggerSpawn: 0,
       rotation: 1,
       shape: "circle",
       speed: 10,
@@ -781,6 +902,7 @@ var Sparticles = (function () {
     this.resizable = !width && !height;
     this.width = this.resizable ? this.el.clientWidth : width;
     this.height = this.resizable ? this.el.clientHeight : height;
+    this.time = 0;
     /**
      * initialise the sparticles instance
      * @returns {Object} - reference to the Sparticles instance
@@ -905,6 +1027,7 @@ var Sparticles = (function () {
 
     this.resetSparticles = this.createSparticles = function () {
       this.sparticles = [];
+      this.time = 0;
       this.ctx.globalCompositeOperation = this.settings.composition;
 
       for (var i = 0; i < this.settings.count; i++) {
@@ -1374,6 +1497,7 @@ var Sparticles = (function () {
     return canvas;
   };
   /**
+   * - progress the time since the last frame
    * - wipe the canvas,
    * - update each sparticle,
    * - render each sparticle
@@ -1382,7 +1506,11 @@ var Sparticles = (function () {
    */
 
 
-  Sparticles.prototype.drawFrame = function () {
+  Sparticles.prototype.drawFrame = function (t) {
+    if (typeof t === "number") {
+      this.time += t / 1000;
+    }
+
     this.ctx.clearRect(0, 0, this.width, this.height);
 
     for (var i = 0; i < this.sparticles.length; i++) {

@@ -1,6 +1,6 @@
 {
   "name": "sparticles",
-  "version": "1.3.1",
+  "version": "2.0.0",
   "description": "Lightweight, High Performance Particles in Canvas",
   "main": "dist/sparticles.mjs",
   "files": [
