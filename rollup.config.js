@@ -13,7 +13,7 @@ const banner = () => `/**!
  * @license ${pkg.license}
  * @author ${pkg.author}
  * @website ${pkg.homepage}
- * @repository ${pkg.repository}
+ * @repository ${pkg.repository.url.replace("git+", "")}
  */
 `;
 

@@ -23,7 +23,7 @@ import { Sparticle } from "./sparticle.js";
  * @param {Number} [options.minSize=1] - minimum size of every particle
  * @param {Number} [options.maxSize=10] - maximum size of every particle
  * @param {Boolean} [options.bounce=false] - should the particles bounce off edge of canvas
- * @param {Number} [options.drift=1] - the "driftiness" of particles which have a horizontal/vertical direction
+ * @param {Number} [options.drift=1] - side-to-side drift perpendicular to each particle's direction of travel (when speed > 0)
  * @param {Number} [options.glow=0] - the glow effect size of each particle
  * @param {Boolean} [options.twinkle=false] - particles to exhibit an alternative alpha transition as "twinkling"
  * @param {String} [options.style=fill] - fill style of particles (one of; "fill", "stroke" or "both")

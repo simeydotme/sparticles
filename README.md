@@ -302,7 +302,7 @@ A brief look at all the options, with more details below.
 | **[minSize](#minSize)**                   | `Number`         | `1`           | minimum size of every particle                                                               |
 | **[maxSize](#maxSize)**                   | `Number`         | `10`          | maximum size of every particle                                                               |
 | **[bounce](#bounce)**                     | `Boolean`        | `false`       | should the particles bounce off edge of canvas                                               |
-| **[drift](#drift)**                       | `Number`         | `1`           | the "driftiness" of particles which have a horizontal/vertical direction                     |
+| **[drift](#drift)**                       | `Number`         | `1`           | side-to-side drift perpendicular to each particle’s direction of travel                    |
 | **[glow](#glow)**                         | `Number`         | `0`           | the glow effect size of each particle                                                        |
 | **[twinkle](#twinkle)**                   | `Boolean`        | `false`       | particles to exhibit an alternative alpha transition as "twinkling"                          |
 | **[style](#style)**                       | `String`         | `fill`        | fill style of particles (one of; `fill`, `stroke` or `both`)                                 |
@@ -466,8 +466,7 @@ This is best used with `speed: 0;` and a high value for `[x/yVariance]` to creat
 - Default: `1`
 - Range: `1 - 20`
 
-How much a particle will "drift" as it falls. This is to imply a floatiness/wind effect like seen with snow flakes,
-or leaves. The `drift` will only apply if `speed > 0` and `direction` is near to a 90degree value (`0, 90, 180, 270`). When [spawnFromCenter](#spawnFromCenter) is true, drift is applied perpendicular to each particle’s radial direction (side-to-side in the particle’s own frame).
+How much each particle will “drift” side-to-side as it moves, giving a floaty or wind-blown effect (e.g. snow, leaves). Drift is applied **perpendicular to the particle’s direction of travel** for every particle, and only when `speed > 0`. Values are proportional to `speed` and may require fine-tuning.
 
 ## `spawnFromCenter`
 - Type: `Boolean`

@@ -166,7 +166,7 @@ window.initGui = function() {
   anim.add(options, "rotation", 0, 20, 0.1).onFinishChange(rerender);
   const move = anim.addFolder("Movement");
   move.add(options, "parallax", 0, 100, 1).onFinishChange(rerender);
-  move.add(options, "drift", 0, 30, 0.01).onFinishChange(rerender);
+  move.add(options, "drift", 0, 300, 0.01).onFinishChange(rerender);
   move.add(options, "xVariance", 0, 20, 0.1).onFinishChange(rerender);
   move.add(options, "yVariance", 0, 20, 0.1).onFinishChange(rerender);
   const spawn = anim.addFolder("From center");

@@ -1,5 +1,9 @@
 # Change log
 
+## 2.1.0
+
+- **Drift:** Drift is now applied **perpendicular to every particle’s direction of travel** (derived from its velocity), not only when the global `direction` was roughly horizontal or vertical. So particles moving at any angle get the same side-to-side sway when `drift` and `speed` are set. No API changes; behavior is more consistent and predictable.
+
 ## 2.0.0
 
 - **Rotation:** Particle spin is gentler for the same setting. A rotation value of 10 (or 20) now spins about half as fast as before, so the 0–20 range is easier to use without things looking too frantic. If you upgrade and your particles feel too slow, try doubling your `rotation` value.

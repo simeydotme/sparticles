@@ -505,9 +505,10 @@ Sparticle.prototype.updateRotation = function() {
 };
 
 /**
- * progress the particle's drift value according
- * to the settings given. For spawnFromCenter, drift is applied
- * perpendicular to the direction of travel (particle's own frame).
+ * progress the particle's drift value according to the settings given.
+ * Drift is always applied perpendicular to the particle's direction of travel:
+ * for spawnFromCenter we use the fixed outward angle; otherwise we derive
+ * direction from the current velocity (dx, dy).
  */
 Sparticle.prototype.updateDrift = function() {
   const _ = this.settings;
@@ -515,20 +516,13 @@ Sparticle.prototype.updateDrift = function() {
     return;
   }
   const wave = (cartesian(this.frame + this.frameoffset)[0] * this.dd) / (this.getDelta() * 15);
-  if (_.spawnFromCenter && this.outwardAngle != null) {
-    // drift perpendicular to radial direction (tangent to circle)
-    const perp = cartesian(this.outwardAngle + 90);
-    this.px += wave * perp[0];
-    this.py += wave * perp[1];
-    return;
-  }
-  if (this.vertical) {
-    // apply HORIZONTAL drift ~ when "direction" is mostly vertical.
-    this.px += wave;
-  } else if (this.horizontal) {
-    // apply VERTICAL drift ~ when "direction" is mostly horizontal.
-    this.py += (cartesian(this.frame + this.frameoffset)[1] * this.dd) / (this.getDelta() * 15);
-  }
+  const travelAngle =
+    _.spawnFromCenter && this.outwardAngle != null
+      ? this.outwardAngle
+      : 90 + (180 / Math.PI) * Math.atan2(this.dy, this.dx);
+  const perp = cartesian(travelAngle + 90);
+  this.px += wave * perp[0];
+  this.py += wave * perp[1];
 };
 
 Sparticle.prototype.render = function(canvasses) {
