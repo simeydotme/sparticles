@@ -1,5 +1,13 @@
 # Change log
 
+## 2.2.0
+
+- **Naming update:** `spawnFromPoint` is now the preferred option name for location-based spawning. `spawnFromCenter` remains fully supported as a backward-compatible alias. If both are provided, `spawnFromPoint` takes precedence.
+
+- **spawnLocations:** Replaced `spawnOffset` with `spawnLocations: [[x,y], ...]` for `spawnFromCenter` mode. Coordinates are now per-axis percentages in `0..100`, and particles are assigned to locations in round-robin order by particle index for even distribution. Invalid values fall back to `[[50,50]]` (center).
+
+- **On-canvas spawn safety:** In `spawnFromCenter` mode, if a random spawn point would place a particle off-canvas, Sparticles now immediately re-rolls a new spawn point. If retries fail repeatedly, it falls back to the spawner origin (clamped inside canvas), ensuring particles always start on-canvas.
+
 ## 2.1.0
 
 - **Drift:** Drift is now applied **perpendicular to every particle’s direction of travel** (derived from its velocity), not only when the global `direction` was roughly horizontal or vertical. So particles moving at any angle get the same side-to-side sway when `drift` and `speed` are set. No API changes; behavior is more consistent and predictable.

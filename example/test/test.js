@@ -43,6 +43,8 @@ let options = {
   shape: ["star"],
   speed: 1,
   spawnArea: 20,
+  spawnLocations: [[50, 50]],
+  spawnFromPoint: false,
   spawnFromCenter: false,
   staggerSpawn: 0,
   style: "both",
@@ -73,11 +75,85 @@ window.onload = function() {
   initStats();
   initSparticles();
   initGui();
-}
+};
+
+window.updateSpawnDebugDots = function() {
+  const $main = document.querySelector("main");
+  if (!$main) return;
+  const centerDot = document.getElementById("spawn-center-dot");
+  const offsetDot = document.getElementById("spawn-offset-dot");
+  if (!centerDot || !offsetDot) return;
+
+  const show = !!options.spawnFromPoint;
+  centerDot.style.display = show ? "block" : "none";
+  offsetDot.style.display = show ? "block" : "none";
+  if (!show) return;
+
+  const rect = $main.getBoundingClientRect();
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+  const loc =
+    Array.isArray(options.spawnLocations) &&
+    Array.isArray(options.spawnLocations[0]) &&
+    options.spawnLocations[0].length >= 2
+      ? options.spawnLocations[0]
+      : [50, 50];
+  const locX = (loc[0] / 100) * rect.width;
+  const locY = (loc[1] / 100) * rect.height;
+
+  centerDot.style.left = `${centerX}px`;
+  centerDot.style.top = `${centerY}px`;
+  offsetDot.style.left = `${locX}px`;
+  offsetDot.style.top = `${locY}px`;
+};
+
+window.ensureSpawnDebugDots = function() {
+  const $main = document.querySelector("main");
+  if (!$main) return;
+  $main.style.position = "relative";
+
+  if (!document.getElementById("spawn-center-dot")) {
+    const centerDot = document.createElement("div");
+    centerDot.id = "spawn-center-dot";
+    centerDot.style.position = "absolute";
+    centerDot.style.width = "12px";
+    centerDot.style.height = "12px";
+    centerDot.style.borderRadius = "50%";
+    centerDot.style.background = "rgba(0,255,80,0.95)";
+    centerDot.style.border = "1px solid rgba(0,0,0,0.4)";
+    centerDot.style.transform = "translate(-50%, -50%)";
+    centerDot.style.pointerEvents = "none";
+    centerDot.style.zIndex = "5";
+    $main.appendChild(centerDot);
+  }
+
+  if (!document.getElementById("spawn-offset-dot")) {
+    const offsetDot = document.createElement("div");
+    offsetDot.id = "spawn-offset-dot";
+    offsetDot.style.position = "absolute";
+    offsetDot.style.width = "8px";
+    offsetDot.style.height = "8px";
+    offsetDot.style.borderRadius = "50%";
+    offsetDot.style.background = "rgba(255,230,0,0.95)";
+    offsetDot.style.border = "1px solid rgba(0,0,0,0.45)";
+    offsetDot.style.transform = "translate(-50%, -50%)";
+    offsetDot.style.pointerEvents = "none";
+    offsetDot.style.zIndex = "6";
+    $main.appendChild(offsetDot);
+  }
+
+  window.updateSpawnDebugDots();
+};
+
+window.addEventListener("resize", () => {
+  window.updateSpawnDebugDots();
+});
 
 window.initSparticles = function() {
   var $main = document.querySelector("main");
+  window.ensureSpawnDebugDots();
   window.mySparticles = new Sparticles($main,JSON.parse(JSON.stringify(options)));
+  window.updateSpawnDebugDots();
 };
 
 window.initStats = function() {
@@ -133,6 +209,36 @@ window.initGui = function() {
       }
     }
     window.initSparticles();
+    window.updateSpawnDebugDots();
+  };
+
+  const existing = Array.isArray(options.spawnLocations) ? options.spawnLocations : [];
+  const spawnLocationsConfig = {
+    location1Enabled: true,
+    location1X: Array.isArray(existing[0]) ? existing[0][0] : 50,
+    location1Y: Array.isArray(existing[0]) ? existing[0][1] : 50,
+    location2Enabled: Array.isArray(existing[1]),
+    location2X: Array.isArray(existing[1]) ? existing[1][0] : 50,
+    location2Y: Array.isArray(existing[1]) ? existing[1][1] : 50,
+    location3Enabled: Array.isArray(existing[2]),
+    location3X: Array.isArray(existing[2]) ? existing[2][0] : 50,
+    location3Y: Array.isArray(existing[2]) ? existing[2][1] : 50,
+  };
+
+  const rerenderSpawnLocations = () => {
+    const nextLocations = [];
+    if (spawnLocationsConfig.location1Enabled) {
+      nextLocations.push([spawnLocationsConfig.location1X, spawnLocationsConfig.location1Y]);
+    }
+    if (spawnLocationsConfig.location2Enabled) {
+      nextLocations.push([spawnLocationsConfig.location2X, spawnLocationsConfig.location2Y]);
+    }
+    if (spawnLocationsConfig.location3Enabled) {
+      nextLocations.push([spawnLocationsConfig.location3X, spawnLocationsConfig.location3Y]);
+    }
+    options.spawnLocations = nextLocations.length > 0 ? nextLocations : [[50, 50]];
+    rerender();
+    window.updateSpawnDebugDots();
   };
 
   var rerenderColors = function(v) {
@@ -170,8 +276,21 @@ window.initGui = function() {
   move.add(options, "xVariance", 0, 20, 0.1).onFinishChange(rerender);
   move.add(options, "yVariance", 0, 20, 0.1).onFinishChange(rerender);
   const spawn = anim.addFolder("From center");
-  spawn.add(options, "spawnFromCenter").onFinishChange(rerender);
+  spawn.add(options, "spawnFromPoint").onFinishChange(rerender);
   spawn.add(options, "spawnArea", 0, 90, 1).onFinishChange(rerender);
+  const spawnLocationsFolder = spawn.addFolder("spawnLocations");
+  const loc1 = spawnLocationsFolder.addFolder("Location 1");
+  loc1.add(spawnLocationsConfig, "location1Enabled").name("enabled").onFinishChange(rerenderSpawnLocations);
+  loc1.add(spawnLocationsConfig, "location1X", 0, 100, 1).name("x").onFinishChange(rerenderSpawnLocations);
+  loc1.add(spawnLocationsConfig, "location1Y", 0, 100, 1).name("y").onFinishChange(rerenderSpawnLocations);
+  const loc2 = spawnLocationsFolder.addFolder("Location 2");
+  loc2.add(spawnLocationsConfig, "location2Enabled").name("enabled").onFinishChange(rerenderSpawnLocations);
+  loc2.add(spawnLocationsConfig, "location2X", 0, 100, 1).name("x").onFinishChange(rerenderSpawnLocations);
+  loc2.add(spawnLocationsConfig, "location2Y", 0, 100, 1).name("y").onFinishChange(rerenderSpawnLocations);
+  const loc3 = spawnLocationsFolder.addFolder("Location 3");
+  loc3.add(spawnLocationsConfig, "location3Enabled").name("enabled").onFinishChange(rerenderSpawnLocations);
+  loc3.add(spawnLocationsConfig, "location3X", 0, 100, 1).name("x").onFinishChange(rerenderSpawnLocations);
+  loc3.add(spawnLocationsConfig, "location3Y", 0, 100, 1).name("y").onFinishChange(rerenderSpawnLocations);
   spawn.add(options, "staggerSpawn", 0, 20, 0.1).onFinishChange(rerender);
   const vis = gui.addFolder("Visual");
   vis.add(options, "glow", 0,150).onFinishChange(rerender);

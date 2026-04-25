@@ -1,6 +1,6 @@
 /**!
  * Sparticles - Lightweight, High Performance Particles in Canvas
- * @version 2.1.0
+ * @version 2.2.0
  * @license MPL-2.0
  * @author simeydotme <simey.me@gmail.com>
  * @website http://sparticlesjs.dev
@@ -225,7 +225,7 @@ var Sparticles = (function () {
       this.styles = parent.styles;
       this.index = typeof index === "number" ? index : 0;
       this.spawnAt = 0;
-      this.hasSpawned = !(this.settings.spawnFromCenter && this.settings.staggerSpawn > 0);
+      this.hasSpawned = !(this.settings.spawnFromPoint && this.settings.staggerSpawn > 0);
       this.ctx = parent.canvas.getContext("2d");
       this.setup();
       this.init();
@@ -260,32 +260,75 @@ var Sparticles = (function () {
     this.horizontal = _.direction > 60 && _.direction < 120 || _.direction > 240 && _.direction < 300;
   };
   /**
-   * set position to a random point in the center spawn circle, set outwardAngle,
-   * dx/dy for radial motion, and alpha/targetAlpha for fade-in. Used when
-   * spawnFromCenter is true (from init and reset).
+   * resolve this particle's spawn location tuple [x,y] from settings.spawnLocations
+   * as percentages of canvas width/height. Invalid input falls back to [50,50].
+   * Uses round-robin by particle index for even deterministic distribution.
+   * @returns {Number[]} normalized [x,y] in range 0..100
    */
 
 
-  Sparticle.prototype.setPositionAndVelocityFromCenter = function () {
+  Sparticle.prototype.getSpawnLocation = function () {
+    var locations = this.settings.spawnLocations;
+    var tuples = Array.isArray(locations) ? locations.filter(function (item) {
+      return Array.isArray(item) && item.length >= 2;
+    }) : [];
+    var normalized = tuples.length > 0 ? tuples.map(function (tuple) {
+      return [clamp(tuple[0] != null ? tuple[0] : 50, 0, 100), clamp(tuple[1] != null ? tuple[1] : 50, 0, 100)];
+    }) : [[50, 50]];
+    var index = this.index % normalized.length;
+    return normalized[index];
+  };
+  /**
+   * set spawn position, travel angle, velocity and alpha values for spawnFromPoint mode.
+   * Supports spawnArea, spawnLocations, and safe re-roll for on-canvas spawn placement.
+   */
+
+
+  Sparticle.prototype.setSpawnFromAreaAndVelocity = function () {
     var _ = this.settings;
     var canvas = this.canvas;
-    var cx = canvas.width / 2;
-    var cy = canvas.height / 2;
+    var location = this.getSpawnLocation();
+    var cx = location[0] / 100 * canvas.width;
+    var cy = location[1] / 100 * canvas.height;
     var pct = clamp(_.spawnArea != null ? _.spawnArea : 20, 0, 90);
     var diameter = pct / 100 * canvas.width;
     var rMax = diameter / 2;
-    var angle = random(0, 2 * Math.PI);
-    var r = random(0, rMax);
-    this.px = cx + r * Math.cos(angle);
-    this.py = cy + r * Math.sin(angle);
-    this.outwardAngle = 90 + 180 / Math.PI * Math.atan2(this.py - cy, this.px - cx);
+    var half = this.size / 2;
+    var maxAttempts = 40;
+    var attempts = 0;
+    var spawnX = cx;
+    var spawnY = cy;
+
+    while (attempts < maxAttempts) {
+      var angle = random(0, 2 * Math.PI);
+      var r = random(0, rMax);
+      spawnX = cx + r * Math.cos(angle);
+      spawnY = cy + r * Math.sin(angle);
+      var onCanvas = spawnX - half >= 0 && spawnY - half >= 0 && spawnX + half <= canvas.width && spawnY + half <= canvas.height;
+
+      if (onCanvas) {
+        break;
+      }
+
+      attempts += 1;
+    }
+
+    if (attempts >= maxAttempts) {
+      // fallback to spawner center (clamped) if no valid point found quickly
+      spawnX = clamp(cx, half, Math.max(half, canvas.width - half));
+      spawnY = clamp(cy, half, Math.max(half, canvas.height - half));
+    }
+
+    this.px = spawnX - half;
+    this.py = spawnY - half;
+    this.outwardAngle = 90 + 180 / Math.PI * Math.atan2(spawnY - cy, spawnX - cx);
     this.dx = this.getDeltaX();
     this.dy = this.getDeltaY();
     this.alpha = 0;
     this.targetAlpha = random(_.minAlpha, _.maxAlpha);
     this.fadeInComplete = false;
 
-    if (_.spawnFromCenter && _.staggerSpawn > 0 && !this.hasSpawned) {
+    if (_.spawnFromPoint && _.staggerSpawn > 0 && !this.hasSpawned) {
       // initial spawn only: use settings.count for linear distribution over staggerSpawn seconds
       var count = _.count || 1;
       var steps = Math.max(count - 1, 1);
@@ -313,8 +356,8 @@ var Sparticles = (function () {
       this.alpha = random(_.minAlpha, _.maxAlpha);
     }
 
-    if (_.spawnFromCenter) {
-      this.setPositionAndVelocityFromCenter();
+    if (_.spawnFromPoint) {
+      this.setSpawnFromAreaAndVelocity();
       return;
     }
 
@@ -337,10 +380,10 @@ var Sparticles = (function () {
     // give the particle a new set of initial values
     this.setup();
 
-    if (this.settings.spawnFromCenter) {
+    if (this.settings.spawnFromPoint) {
       this.hasSpawned = true;
       this.spawnAt = 0;
-      this.setPositionAndVelocityFromCenter();
+      this.setSpawnFromAreaAndVelocity();
       return;
     } // set the particle's Y position
 
@@ -506,13 +549,13 @@ var Sparticles = (function () {
   };
   /**
    * get the direction angle in degrees for this particle (global direction
-   * or per-particle outward angle when spawnFromCenter).
+   * or per-particle outward angle when spawnFromPoint).
    * @returns {Number} - angle in degrees (0 = up)
    */
 
 
   Sparticle.prototype.getDirectionAngle = function () {
-    if (this.settings.spawnFromCenter && this.outwardAngle != null) {
+    if (this.settings.spawnFromPoint && this.outwardAngle != null) {
       return this.outwardAngle;
     }
 
@@ -604,7 +647,7 @@ var Sparticles = (function () {
 
   Sparticle.prototype.update = function () {
     this.frame += 1;
-    var stagger = this.settings.spawnFromCenter && this.settings.staggerSpawn > 0 && !this.hasSpawned;
+    var stagger = this.settings.spawnFromPoint && this.settings.staggerSpawn > 0 && !this.hasSpawned;
 
     if (stagger && this.parent && typeof this.parent.time === "number") {
       var time = this.parent.time;
@@ -624,7 +667,7 @@ var Sparticles = (function () {
   };
   /**
    * progress the particle's alpha value depending on the
-   * alphaSpeed and the twinkle setting. When spawnFromCenter,
+   * alphaSpeed and the twinkle setting. When spawnFromPoint,
    * particles fade in from 0 to targetAlpha using da before normal alpha behavior.
    * @returns {Number} - new alpha value of the particle
    */
@@ -633,7 +676,7 @@ var Sparticles = (function () {
   Sparticle.prototype.updateAlpha = function () {
     var _ = this.settings; // Fade-in from spawn only until we've reached targetAlpha once; then use normal fade/twinkle
 
-    if (_.spawnFromCenter && this.targetAlpha != null && !this.fadeInComplete && this.alpha < this.targetAlpha) {
+    if (_.spawnFromPoint && this.targetAlpha != null && !this.fadeInComplete && this.alpha < this.targetAlpha) {
       var fadeInTick = Math.abs(this.da) / 1000 * (_.alphaSpeed || 1) * 0.5;
       this.alpha = Math.min(this.targetAlpha, this.alpha + fadeInTick);
 
@@ -756,7 +799,7 @@ var Sparticles = (function () {
   /**
    * progress the particle's drift value according to the settings given.
    * Drift is always applied perpendicular to the particle's direction of travel:
-   * for spawnFromCenter we use the fixed outward angle; otherwise we derive
+   * for spawnFromPoint we use the fixed outward angle; otherwise we derive
    * direction from the current velocity (dx, dy).
    */
 
@@ -769,7 +812,7 @@ var Sparticles = (function () {
     }
 
     var wave = cartesian(this.frame + this.frameoffset)[0] * this.dd / (this.getDelta() * 15);
-    var travelAngle = _.spawnFromCenter && this.outwardAngle != null ? this.outwardAngle : 90 + 180 / Math.PI * Math.atan2(this.dy, this.dx);
+    var travelAngle = _.spawnFromPoint && this.outwardAngle != null ? this.outwardAngle : 90 + 180 / Math.PI * Math.atan2(this.dy, this.dx);
     var perp = cartesian(travelAngle + 90);
     this.px += wave * perp[0];
     this.py += wave * perp[1];
@@ -815,7 +858,7 @@ var Sparticles = (function () {
    * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
    * @param {Number} [options.speed=10] - default velocity of every particle
    * @param {Number} [options.parallax=0] - strength of size-based speed variation 0–100 (0 = none; smaller particles slower, larger faster)
-   * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓); ignored when spawnFromCenter is true
+   * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓); ignored when spawnFromPoint is true
    * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
    * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
    * @param {Boolean} [options.rotate=true] - can particles rotate
@@ -836,9 +879,11 @@ var Sparticles = (function () {
    * @param {(String|String[])} [options.color=random] - css color as string, or array of color strings (can also be "random")
    * @param {Function} [options.randomColor=randomHsl(index,total)] - a custom function for setting the random colors when color="random"
    * @param {Number} [options.randomColorCount=3] - the number of random colors to generate when color is "random"
-   * @param {Boolean} [options.spawnFromCenter=false] - when true, particles spawn in a circle at center and move radially outward (direction ignored)
-   * @param {Number} [options.spawnArea=20] - spawn circle diameter as % of canvas width (0–90), when spawnFromCenter is true
-   * @param {Number} [options.staggerSpawn=0] - when >0 and spawnFromCenter, linearly staggers initial spawns over this many seconds (0 = all spawn together)
+   * @param {Boolean} [options.spawnFromPoint=false] - when true, particles spawn in configured locations and move radially outward (direction ignored)
+   * @param {Boolean} [options.spawnFromCenter=false] - alias of spawnFromPoint
+   * @param {Number} [options.spawnArea=20] - spawn circle diameter as % of canvas width (0–90), when spawnFromPoint is true
+   * @param {Number[][]} [options.spawnLocations=[[50,50]]] - array of [x,y] spawn origins as percentages of width/height (each clamped 0..100), when spawnFromPoint is true
+   * @param {Number} [options.staggerSpawn=0] - when >0 and spawnFromPoint, linearly staggers initial spawns over this many seconds (0 = all spawn together)
    * @param {Number} [width] - the width of the canvas element
    * @param {Number} [height=width] - the height of the canvas element
    * @returns {Object} - reference to a new Sparticles instance
@@ -876,6 +921,8 @@ var Sparticles = (function () {
       parallax: 0,
       rotate: true,
       spawnArea: 20,
+      spawnLocations: [[50, 50]],
+      spawnFromPoint: false,
       spawnFromCenter: false,
       staggerSpawn: 0,
       rotation: 1,
@@ -888,6 +935,14 @@ var Sparticles = (function () {
     };
     this.el = node || document.body;
     this.settings = _objectSpread2(_objectSpread2({}, defaults), options);
+    var hasExplicitSpawnFromPoint = options && Object.prototype.hasOwnProperty.call(options, "spawnFromPoint");
+
+    if (!hasExplicitSpawnFromPoint) {
+      this.settings.spawnFromPoint = !!this.settings.spawnFromCenter;
+    } // keep the legacy alias synced for compatibility and introspection
+
+
+    this.settings.spawnFromCenter = this.settings.spawnFromPoint;
     this.resizable = !width && !height;
     this.width = this.resizable ? this.el.clientWidth : width;
     this.height = this.resizable ? this.el.clientHeight : height;

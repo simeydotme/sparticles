@@ -290,7 +290,7 @@ A brief look at all the options, with more details below.
 | **[count](#count)**                       | `Number`         | `50`          | number of particles on the canvas simultaneously                                             |
 | **[speed](#speed)**                       | `Number`         | `10`          | default velocity of every particle                                                           |
 | **[parallax](#parallax)**                 | `Number`         | `0`           | strength of size-based speed variation 0–100 (0 = off; smaller slower, larger faster)        |
-| **[direction](#direction)**               | `Number`         | `180`         | default direction in degrees (0 = ↑, 180 = ↓); ignored when `spawnFromCenter` is true          |
+| **[direction](#direction)**               | `Number`         | `180`         | default direction in degrees (0 = ↑, 180 = ↓); ignored when `spawnFromPoint` is true          |
 | **[xVariance](#xVariance)**               | `Number`         | `2`           | random deviation of particles on x-axis from default direction                               |
 | **[yVariance](#yVariance)**               | `Number`         | `2`           | random deviation of particles on y-axis from default direction                               |
 | **[rotate](#rotate)**                     | `Boolean`        | `true`        | can particles rotate                                                                         |
@@ -310,9 +310,11 @@ A brief look at all the options, with more details below.
 | **[color](#color)**                       | `String`/`Array` | `random`      | css color as string, or array of color strings (can also be `random`)                        |
 | **[randomColor](#randomColor)**           | `Function`       | `randomHsl()` | function for returning a random color when the color is set as `random`                      |
 | **[randomColorCount](#randomColorCount)** | `Number`         | `3`           | number of random colours when the color is set as `random`                                   |
-| **[spawnFromCenter](#spawnFromCenter)**   | `Boolean`        | `false`       | when `true`, particles spawn in a circle at center and move radially outward                   |
-| **[spawnArea](#spawnArea)**               | `Number`         | `20`          | spawn circle diameter as % of canvas width (0–90) when `spawnFromCenter` is true               |
-| **[staggerSpawn](#staggerSpawn)**         | `Number`         | `0`           | when `> 0` and `spawnFromCenter`, staggers initial spawns over this many seconds        |
+| **[spawnFromPoint](#spawnFromPoint)**     | `Boolean`        | `false`       | when `true`, particles spawn from configured points and move radially outward                   |
+| **[spawnFromCenter](#spawnFromCenter)**   | `Boolean`        | `false`       | alias of `spawnFromPoint`                                                                       |
+| **[spawnArea](#spawnArea)**               | `Number`         | `20`          | spawn circle diameter as % of canvas width (0–90) when `spawnFromPoint` is true               |
+| **[spawnLocations](#spawnLocations)**     | `Array<Array<Number>>` | `[[50,50]]` | array of [x,y] spawn origins as % of canvas width/height (each clamped 0..100)                  |
+| **[staggerSpawn](#staggerSpawn)**         | `Number`         | `0`           | when `> 0` and `spawnFromPoint`, staggers initial spawns over this many seconds        |
 | **[imageUrl](#imageUrl)**                 | `String`/`Array` |               | if shape is `image`, define an image url (can be data-uri, **should be square (1:1 ratio)**) |
 
 ---
@@ -357,7 +359,7 @@ Strength of size-based speed variation. When `0`, parallax is off and all partic
 - Default: `180`
 - Range: `0 - 360`
 
-The base angle (in degrees) at which the particles are travelling, so long as they have a speed value. Ignored when [spawnFromCenter](#spawnFromCenter) is true.
+The base angle (in degrees) at which the particles are travelling, so long as they have a speed value. Ignored when [spawnFromPoint](#spawnFromPoint) is true.
 
 ## `xVariance`
 - Type: `Number`
@@ -468,25 +470,51 @@ This is best used with `speed: 0;` and a high value for `[x/yVariance]` to creat
 
 How much each particle will “drift” side-to-side as it moves, giving a floaty or wind-blown effect (e.g. snow, leaves). Drift is applied **perpendicular to the particle’s direction of travel** for every particle, and only when `speed > 0`. Values are proportional to `speed` and may require fine-tuning.
 
+## `spawnFromPoint`
+- Type: `Boolean`
+- Default: `false`
+
+When `true`, particles spawn at a random position inside a circle centered around one of the configured [spawnLocations](#spawnLocations), then move **radially outward**. The global [direction](#direction) option is ignored; each particle’s direction is set by its spawn position. Other options (speed, parallax, variance, rotation, drift, bounce, etc.) still apply. Drift is applied perpendicular to the direction of travel. Particles start at 0 opacity and fade in to their initial alpha as they move away, using each particle’s alpha delta for the fade-in rate.
+
 ## `spawnFromCenter`
 - Type: `Boolean`
 - Default: `false`
 
-When `true`, particles spawn at a random position inside a circle at the center of the canvas and move **radially outward**. The global [direction](#direction) option is ignored; each particle’s direction is set by its spawn position. Other options (speed, parallax, variance, rotation, drift, bounce, etc.) still apply. Drift is applied perpendicular to the direction of travel. Particles start at 0 opacity and fade in to their initial alpha as they move away, using each particle’s alpha delta for the fade-in rate.
+Alias of [spawnFromPoint](#spawnFromPoint).
 
 ## `spawnArea`
 - Type: `Number`
 - Default: `20`
 - Range: `0 - 90` (percentage of canvas width)
 
-Size of the spawn circle as a **percentage of the canvas width** when [spawnFromCenter](#spawnFromCenter) is true. Values are clamped between 0 and 90. For example, `20` means the circle’s diameter is 20% of the canvas width. New particles (and respawned particles that have gone off-canvas) appear at a random point inside this circle.
+Size of the spawn circle as a **percentage of the canvas width** when [spawnFromPoint](#spawnFromPoint) is true. Values are clamped between 0 and 90. For example, `20` means the circle’s diameter is 20% of the canvas width. New particles (and respawned particles that have gone off-canvas) appear at a random point inside this circle.
+
+When a sampled spawn point would place any part of the particle outside the canvas bounds, Sparticles instantly re-rolls a new point. If valid points are still not found after several tries, it falls back to the (clamped) spawner origin to ensure particles always spawn on-canvas.
+
+## `spawnLocations`
+- Type: `Array<Array<Number>>` (array of tuple-like `[x, y]`)
+- Default: `[[50,50]]`
+- Range per axis: `0 - 100` (clamped)
+
+Defines one or more spawn origins for [spawnFromPoint](#spawnFromPoint), where each tuple is:
+- `x` as `% of canvas width`
+- `y` as `% of canvas height`
+
+Particles are assigned to spawn origins in **round-robin order by particle index** for even distribution across the locations.
+
+Examples:
+- `[[50,50]]` -> center
+- `[[25,50],[75,50]]` -> two horizontal spawn origins
+- `[[20,20],[80,20],[20,80],[80,80]]` -> four-corner style distribution
+
+If `spawnLocations` is missing or not an array of tuples, Sparticles falls back to `[[50,50]]`.
 
 ## `staggerSpawn`
 - Type: `Number`
 - Default: `0`
 - Range: `0 - …` (seconds)
 
-When greater than 0 (and [spawnFromCenter](#spawnFromCenter) is true), the initial particles are **linearly staggered** over this many seconds instead of all appearing at once. For a given `count`, each particle gets a spawn time evenly distributed between `0` and `staggerSpawn`, and will begin moving/fading in only after its own time has passed. Resets after going off-canvas are not staggered; they respawn immediately.
+When greater than 0 (and [spawnFromPoint](#spawnFromPoint) is true), the initial particles are **linearly staggered** over this many seconds instead of all appearing at once. For a given `count`, each particle gets a spawn time evenly distributed between `0` and `staggerSpawn`, and will begin moving/fading in only after its own time has passed. Resets after going off-canvas are not staggered; they respawn immediately.
 
 ## `glow`
 - Type: `Number`

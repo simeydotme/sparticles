@@ -11,7 +11,7 @@ import { Sparticle } from "./sparticle.js";
  * @param {Number} [options.count=50] - number of particles on the canvas simultaneously
  * @param {Number} [options.speed=10] - default velocity of every particle
  * @param {Number} [options.parallax=0] - strength of size-based speed variation 0–100 (0 = none; smaller particles slower, larger faster)
- * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓); ignored when spawnFromCenter is true
+ * @param {Number} [options.direction=180] - default direction of particles in degrees (0 = ↑, 180 = ↓); ignored when spawnFromPoint is true
  * @param {Number} [options.xVariance=2] - random deviation of particles on x-axis from default direction
  * @param {Number} [options.yVariance=2] - random deviation of particles on y-axis from default direction
  * @param {Boolean} [options.rotate=true] - can particles rotate
@@ -32,9 +32,11 @@ import { Sparticle } from "./sparticle.js";
  * @param {(String|String[])} [options.color=random] - css color as string, or array of color strings (can also be "random")
  * @param {Function} [options.randomColor=randomHsl(index,total)] - a custom function for setting the random colors when color="random"
  * @param {Number} [options.randomColorCount=3] - the number of random colors to generate when color is "random"
- * @param {Boolean} [options.spawnFromCenter=false] - when true, particles spawn in a circle at center and move radially outward (direction ignored)
- * @param {Number} [options.spawnArea=20] - spawn circle diameter as % of canvas width (0–90), when spawnFromCenter is true
- * @param {Number} [options.staggerSpawn=0] - when >0 and spawnFromCenter, linearly staggers initial spawns over this many seconds (0 = all spawn together)
+ * @param {Boolean} [options.spawnFromPoint=false] - when true, particles spawn in configured locations and move radially outward (direction ignored)
+ * @param {Boolean} [options.spawnFromCenter=false] - alias of spawnFromPoint
+ * @param {Number} [options.spawnArea=20] - spawn circle diameter as % of canvas width (0–90), when spawnFromPoint is true
+ * @param {Number[][]} [options.spawnLocations=[[50,50]]] - array of [x,y] spawn origins as percentages of width/height (each clamped 0..100), when spawnFromPoint is true
+ * @param {Number} [options.staggerSpawn=0] - when >0 and spawnFromPoint, linearly staggers initial spawns over this many seconds (0 = all spawn together)
  * @param {Number} [width] - the width of the canvas element
  * @param {Number} [height=width] - the height of the canvas element
  * @returns {Object} - reference to a new Sparticles instance
@@ -69,6 +71,8 @@ const Sparticles = function(node, options, width, height) {
     parallax: 0,
     rotate: true,
     spawnArea: 20,
+    spawnLocations: [[50, 50]],
+    spawnFromPoint: false,
     spawnFromCenter: false,
     staggerSpawn: 0,
     rotation: 1,
@@ -81,6 +85,13 @@ const Sparticles = function(node, options, width, height) {
   };
   this.el = node || document.body;
   this.settings = { ...defaults, ...options };
+  const hasExplicitSpawnFromPoint =
+    options && Object.prototype.hasOwnProperty.call(options, "spawnFromPoint");
+  if (!hasExplicitSpawnFromPoint) {
+    this.settings.spawnFromPoint = !!this.settings.spawnFromCenter;
+  }
+  // keep the legacy alias synced for compatibility and introspection
+  this.settings.spawnFromCenter = this.settings.spawnFromPoint;
   this.resizable = !width && !height;
   this.width = this.resizable ? this.el.clientWidth : width;
   this.height = this.resizable ? this.el.clientHeight : height;
